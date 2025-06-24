@@ -1,37 +1,35 @@
-import { PocketStore } from './PocketStore.ts';
-import { GraphqlClient } from './graphql.ts';
-import { PocketKv } from './PocketKv.ts';
-import {
+import { PocketStore } from './PocketStore';
+import { GraphqlClient } from './graphql';
+import { PocketKv } from './PocketKv';
+import type {
   ArticleFetchQueueItem,
   PocketCredentials,
   PocketItem,
   PocketSavedItemWithSlug,
   PocketUnknownItem,
-} from './types.ts';
-import { parseArgs } from '@std/cli/parse-args';
-import { join as pathJoin } from '@std/path/join';
-import { ensureDir } from '@std/fs/ensure-dir';
+} from './types';
+import path from 'path';
+import fs from 'fs/promises';
+import { parseArgs } from 'node:util';
+// If you see type errors for 'process', install @types/node: bun add -d @types/node
 
 const POCKET_CREDENTIALS: PocketCredentials = {
-  accessToken: Deno.env.get('POCKET_ACCESS_TOKEN') || '',
-  consumerKey: Deno.env.get('POCKET_CONSUMER_KEY') || '',
+  accessToken: process.env.POCKET_ACCESS_TOKEN || '',
+  consumerKey: process.env.POCKET_CONSUMER_KEY || '',
 };
 
-const KV_PATH = 'store.sqlite';
+const QUEUE_PATH = 'queue.jsonl';
+const CHECKPOINT_PATH = 'checkpoint.json';
 const OUTPUT_DIR = '_data';
 
 const pocketClient = GraphqlClient(POCKET_CREDENTIALS);
 
-const args = parseArgs(Deno.args, {
-  boolean: ['enqueue', 'process'],
-  string: ['output'],
-  alias: {
-    o: 'output',
-  },
-  default: {
-    enqueue: false,
-    process: false,
-    output: OUTPUT_DIR,
+const { values: args } = parseArgs({
+  args: process.argv.slice(2),
+  options: {
+    enqueue: { type: 'boolean', default: false },
+    process: { type: 'boolean', default: false },
+    output: { type: 'string', default: OUTPUT_DIR, short: 'o' },
   },
 });
 
@@ -54,7 +52,6 @@ async function listAllItems(kv: PocketKv) {
       let itemsCount = 0;
       for (const edge of items.user.savedItems.edges) {
         const node = edge?.node;
-        // console.debug(node);
         if (!node) {
           console.warn('Skipping edge without node:', edge);
           continue;
@@ -107,10 +104,8 @@ async function getItemProcessor(outputDir: string) {
       console.info(`Processing item: ${slugOrItemId}`);
       let data: unknown = null;
       if (slugId) {
-        // console.info(`Fetching item by slug: ${slugId}`);
         data = await pocketClient.getSavedItemBySlug(slugId);
       } else {
-        // console.info(`Fetching item by ID: ${savedId}`);
         data = await pocketClient.getSavedItemById(savedId);
       }
 
@@ -124,17 +119,16 @@ async function getItemProcessor(outputDir: string) {
 
 async function main() {
   const outputDir = args.output;
-  await ensureDir(outputDir);
-  const kvPath = pathJoin(outputDir, KV_PATH);
-  using kv = await Deno.openKv(kvPath);
-  const pocketKv = new PocketKv(kv);
+  await fs.mkdir(outputDir, { recursive: true });
+  const queuePath = path.join(outputDir, QUEUE_PATH);
+  const checkpointPath = path.join(outputDir, CHECKPOINT_PATH);
+  const pocketKv = new PocketKv(queuePath, checkpointPath);
 
-  Deno.addSignalListener('SIGINT', () => {
-    kv.close();
-    Deno.exit(0);
+  process.on('SIGINT', () => {
+    process.exit(0);
   });
 
-  const promises = [];
+  const promises: Promise<void>[] = [];
   if (args.enqueue) {
     console.info('Enqueuing items...');
     promises.push(listAllItems(pocketKv));

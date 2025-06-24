@@ -1,10 +1,17 @@
 {
-  "name": "getpocket-archive",
+  "name": "pocket-archive",
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "graphql": "^16.11.0",
+    "graphql-request": "^7.2.0",
+    "p-queue": "^8.1.0",
+    "plainjob": "^0.0.14"
   }
 }
