@@ -33,9 +33,13 @@ The application writes to `_data` directory by default.
     deno task process
     ```
 
-##3 Command line options
 
-You can also invoke the main script directly (in this case to both enqueue and process in a single process):
+> [!IMPORTANT]
+> Currently there is no mechanism to gracefully end the processing task. If it's hanging for a while without any output, just kill it with <kbd>Ctrl+C</kbd>.
+
+### Command line options
+
+You can invoke the main script directly (in this case to both enqueue and process in a single process):
 
 ```shell
 deno run --allow-all --unstable-kv main.ts --enqueue --process --output ./my_output_directory
@@ -47,10 +51,11 @@ deno run --allow-all --unstable-kv main.ts --enqueue --process --output ./my_out
 
 ## Notes
 
-- The application uses rate limiting to respect Pocket's API limits
-- Processing resumes from the last checkpoint if interrupted
-- Items are stored by their slug ID when available, otherwise by saved ID
-- Existing items are skipped to avoid unnecessary re-processing
+- The application dumps raw JSON data from GraphQL API.
+- The application uses and shows Pocket's rate limiting; when the limit is reached, the application pauses until the limit resets. (From my testing the limit is usually 500 requests per hour.)
+- Enqueueing stores the last known cursor, so it resumes when interrupted.
+- Items are stored by their slug ID when available, otherwise by saved ID (typically for unprocessed items).
+- Existing items are skipped to avoid unnecessary re-processing.
 
 ## Obtaining consumer key and access token
 

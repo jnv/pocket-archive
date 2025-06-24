@@ -35,7 +35,7 @@ const args = parseArgs(Deno.args, {
   },
 });
 
-async function listAllItems(kv: PocketKv<ArticleFetchQueueItem>) {
+async function listAllItems(kv: PocketKv) {
   try {
     let hasNextPage = true;
     let cursor: string | null = await kv.getCheckpoint();
@@ -85,35 +85,40 @@ async function getItemProcessor(outputDir: string) {
   const pocketStore = new PocketStore<PocketItem>(outputDir);
   await pocketStore.init();
   return async (queueItem: ArticleFetchQueueItem) => {
-    if (!queueItem?.savedId) {
-      console.warn('Skipping item without savedId:', queueItem);
-      return;
+    try {
+      if (!queueItem?.savedId) {
+        console.warn('Skipping item without savedId:', queueItem);
+        return;
+      }
+      const { savedId } = queueItem;
+      let slugId: string | undefined;
+      if (isItemWithSlug(queueItem.item)) {
+        slugId = queueItem.item.shareId;
+      }
+
+      const slugOrItemId = slugId ?? savedId;
+
+      await pocketStore.writeQueueItem(slugOrItemId, queueItem);
+
+      if (await pocketStore.savedItemExists(slugOrItemId)) {
+        console.info(`Item already exists: ${slugOrItemId}`);
+        return;
+      }
+      console.info(`Processing item: ${slugOrItemId}`);
+      let data: unknown = null;
+      if (slugId) {
+        // console.info(`Fetching item by slug: ${slugId}`);
+        data = await pocketClient.getSavedItemBySlug(slugId);
+      } else {
+        // console.info(`Fetching item by ID: ${savedId}`);
+        data = await pocketClient.getSavedItemById(savedId);
+      }
+
+      await pocketStore.writeSavedItem(slugOrItemId, data);
+    } catch (error) {
+      console.error('Error processing queue item:', queueItem, error);
+      throw error;
     }
-    const { savedId } = queueItem;
-    let slugId: string | undefined;
-    if (isItemWithSlug(queueItem.item)) {
-      slugId = queueItem.item.shareId;
-    }
-
-    const slugOrItemId = slugId ?? savedId;
-
-    await pocketStore.writeQueueItem(slugOrItemId, queueItem);
-
-    if (await pocketStore.savedItemExists(slugOrItemId)) {
-      console.info(`Item already exists: ${slugOrItemId}`);
-      return;
-    }
-
-    let data: unknown = null;
-    if (slugId) {
-      console.info(`Fetching item by slug: ${slugId}`);
-      data = await pocketClient.getSavedItemBySlug(slugId);
-    } else {
-      console.info(`Fetching item by ID: ${savedId}`);
-      data = await pocketClient.getSavedItemById(savedId);
-    }
-
-    await pocketStore.writeSavedItem(slugOrItemId, data);
   };
 }
 
@@ -121,8 +126,13 @@ async function main() {
   const outputDir = args.output;
   await ensureDir(outputDir);
   const kvPath = pathJoin(outputDir, KV_PATH);
-  const kv = await Deno.openKv(kvPath);
-  const pocketKv = new PocketKv<ArticleFetchQueueItem>(kv);
+  using kv = await Deno.openKv(kvPath);
+  const pocketKv = new PocketKv(kv);
+
+  Deno.addSignalListener('SIGINT', () => {
+    kv.close();
+    Deno.exit(0);
+  });
 
   const promises = [];
   if (args.enqueue) {
@@ -137,7 +147,6 @@ async function main() {
   }
 
   await Promise.all(promises);
-  kv.close();
 }
 
 main();
