@@ -1,0 +1,143 @@
+import { PocketStore } from './PocketStore.ts';
+import { GraphqlClient } from './graphql.ts';
+import { PocketKv } from './PocketKv.ts';
+import {
+  ArticleFetchQueueItem,
+  PocketCredentials,
+  PocketItem,
+  PocketSavedItemWithSlug,
+  PocketUnknownItem,
+} from './types.ts';
+import { parseArgs } from '@std/cli/parse-args';
+import { join as pathJoin } from '@std/path/join';
+import { ensureDir } from '@std/fs/ensure-dir';
+
+const POCKET_CREDENTIALS: PocketCredentials = {
+  accessToken: Deno.env.get('POCKET_ACCESS_TOKEN') || '',
+  consumerKey: Deno.env.get('POCKET_CONSUMER_KEY') || '',
+};
+
+const KV_PATH = 'store.sqlite';
+const OUTPUT_DIR = '_data';
+
+const pocketClient = GraphqlClient(POCKET_CREDENTIALS);
+
+const args = parseArgs(Deno.args, {
+  boolean: ['enqueue', 'process'],
+  string: ['output'],
+  alias: {
+    o: 'output',
+  },
+  default: {
+    enqueue: false,
+    process: false,
+    output: OUTPUT_DIR,
+  },
+});
+
+async function listAllItems(kv: PocketKv<ArticleFetchQueueItem>) {
+  try {
+    let hasNextPage = true;
+    let cursor: string | null = await kv.getCheckpoint();
+    if (cursor) {
+      console.info(`Resuming from cursor: ${cursor}`);
+    }
+
+    while (hasNextPage) {
+      const items = await pocketClient.getSavedItems(cursor);
+      if (
+        !items?.user?.savedItems?.edges
+      ) {
+        console.log('No more saved items found.');
+        break;
+      }
+      let itemsCount = 0;
+      for (const edge of items.user.savedItems.edges) {
+        const node = edge?.node;
+        // console.debug(node);
+        if (!node) {
+          console.warn('Skipping edge without node:', edge);
+          continue;
+        }
+        await kv.enqueue(node);
+        itemsCount++;
+      }
+      console.info(`Enqueued ${itemsCount} items`);
+
+      hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
+      cursor = items.user.savedItems.pageInfo.endCursor as string | null;
+      if (cursor) {
+        await kv.setCheckpoint(cursor);
+      }
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
+  return (
+    (o as PocketSavedItemWithSlug)?.__typename === 'Item'
+  );
+}
+
+async function getItemProcessor(outputDir: string) {
+  const pocketStore = new PocketStore<PocketItem>(outputDir);
+  await pocketStore.init();
+  return async (queueItem: ArticleFetchQueueItem) => {
+    if (!queueItem?.savedId) {
+      console.warn('Skipping item without savedId:', queueItem);
+      return;
+    }
+    const { savedId } = queueItem;
+    let slugId: string | undefined;
+    if (isItemWithSlug(queueItem.item)) {
+      slugId = queueItem.item.shareId;
+    }
+
+    const slugOrItemId = slugId ?? savedId;
+
+    await pocketStore.writeQueueItem(slugOrItemId, queueItem);
+
+    if (await pocketStore.savedItemExists(slugOrItemId)) {
+      console.info(`Item already exists: ${slugOrItemId}`);
+      return;
+    }
+
+    let data: unknown = null;
+    if (slugId) {
+      console.info(`Fetching item by slug: ${slugId}`);
+      data = await pocketClient.getSavedItemBySlug(slugId);
+    } else {
+      console.info(`Fetching item by ID: ${savedId}`);
+      data = await pocketClient.getSavedItemById(savedId);
+    }
+
+    await pocketStore.writeSavedItem(slugOrItemId, data);
+  };
+}
+
+async function main() {
+  const outputDir = args.output;
+  await ensureDir(outputDir);
+  const kvPath = pathJoin(outputDir, KV_PATH);
+  const kv = await Deno.openKv(kvPath);
+  const pocketKv = new PocketKv<ArticleFetchQueueItem>(kv);
+
+  const promises = [];
+  if (args.enqueue) {
+    console.info('Enqueuing items...');
+    promises.push(listAllItems(pocketKv));
+  }
+  if (args.process) {
+    console.info('Processing items...');
+    promises.push(pocketKv.listenQueue(
+      await getItemProcessor(outputDir),
+    ));
+  }
+
+  await Promise.all(promises);
+  kv.close();
+}
+
+main();
