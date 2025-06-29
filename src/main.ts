@@ -110,10 +110,14 @@ async function getItemProcessor(outputDir: string) {
 async function monitorQueue(pocketKv: PocketKv) {
   const interval = 5000;
   return new Promise<void>((resolve) => {
+    let lastPendingCount: number | null = null;
     const repeat = () => {
       const pendingCount = pocketKv.getPendingJobs();
       if (pendingCount > 0) {
-        console.info(`Pending jobs: ${pendingCount}`);
+        if (lastPendingCount !== pendingCount) {
+          console.info(`Pending jobs: ${pendingCount}`);
+        }
+        lastPendingCount = pendingCount;
         setTimeout(repeat, interval);
       } else {
         console.info('All jobs processed.');
