@@ -81,13 +81,13 @@ bunx pocket-auth-cli YOUR_CONSUMER_KEY
 ```
 This will open a browser window where you can log in to your Pocket account and authorize the application. After that, it will print the access token to the console:
 
-```json
+```js
 { access_token: "YOUR_ACCESS_TOKEN", username: "your_username" }
 ```
 
 Copy the `access_token` value and use it as your `POCKET_ACCESS_TOKEN` in `.env` file.
 
-> ![NOTE]
+> [!NOTE]
 > If you can't or don't want to use the `pocket-auth-cli`, I wrote [an article about Pocket authentication][bitoff-pocket] if you want to build it yourself. Check also [the official Pocket documentation](https://getpocket.com/developer/docs/authentication).
 
 ## Related resources
