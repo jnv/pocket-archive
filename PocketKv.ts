@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { bun, defineQueue, defineWorker, type Worker } from 'plainjob';
+import { bun, defineQueue, defineWorker, JobStatus, type Worker } from 'plainjob';
 import type Database from 'bun:sqlite';
 import type { Queue } from 'plainjob';
 import type { ArticleFetchQueueItem } from './types';
@@ -40,8 +40,14 @@ export class PocketKv {
     this.worker.start();
   }
 
-  stop(): Promise<void> {
-    return this.worker?.stop() ?? Promise.resolve();
+  getPendingJobs(): number {
+    const pendingCount = this.queue.countJobs({ status: JobStatus.Pending });
+    return pendingCount;
+  }
+
+  async stop(): Promise<void> {
+    await this.worker?.stop();
+    this.queue.close();
   }
 
   async setCheckpoint(cursor: string) {

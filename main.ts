@@ -65,6 +65,7 @@ async function listAllItems(kv: PocketKv) {
   } catch (error) {
     throw error;
   }
+  console.debug('Finished listing all items.');
 }
 
 function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
@@ -110,6 +111,23 @@ async function getItemProcessor(outputDir: string) {
   };
 }
 
+async function monitorQueue(pocketKv: PocketKv) {
+  const interval = 5000;
+  return new Promise<void>((resolve) => {
+    const repeat = () => {
+      const pendingCount = pocketKv.getPendingJobs();
+      if (pendingCount > 0) {
+        console.info(`Pending jobs: ${pendingCount}`);
+        setTimeout(repeat, interval);
+      } else {
+        console.info('All jobs processed.');
+        resolve();
+      }
+    };
+    setTimeout(repeat, interval);
+  });
+}
+
 async function main() {
   const outputDir = args.output;
   await fs.mkdir(outputDir, { recursive: true });
@@ -131,10 +149,12 @@ async function main() {
   }
   if (args.process) {
     console.info('Processing items...');
-    promises.push(pocketKv.listenQueue(await getItemProcessor(outputDir)));
+    pocketKv.listenQueue(await getItemProcessor(outputDir));
+    promises.push(monitorQueue(pocketKv));
   }
 
   await Promise.all(promises);
+  pocketKv.stop();
 }
 
 main();
