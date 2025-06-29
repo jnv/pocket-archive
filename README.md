@@ -34,10 +34,6 @@ The application writes to `_data` directory by default.
     bun run process
     ```
 
-
-> [!IMPORTANT]
-> Currently there is no mechanism to gracefully end the processing task. If it's hanging for a while without any output, just kill it with <kbd>Ctrl+C</kbd>.
-
 ### Command line options
 
 You can invoke the main script directly (in this case to both enqueue and process in a single process):
