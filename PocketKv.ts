@@ -1,11 +1,18 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { bun, defineQueue, defineWorker, JobStatus, type Worker } from 'plainjob';
+import { bun, defineQueue, defineWorker, JobStatus, type Worker, type Logger } from 'plainjob';
 import type Database from 'bun:sqlite';
 import type { Queue } from 'plainjob';
 import type { ArticleFetchQueueItem } from './types';
 
 const QUEUE_NAME = 'article-fetch-queue';
+
+const consoleLogger: Logger = {
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+  debug: () => {},
+};
 
 export class PocketKv {
   queue: Queue;
@@ -33,6 +40,7 @@ export class PocketKv {
       },
       {
         queue: this.queue,
+        logger: consoleLogger,
         onFailed: (job, error) =>
           console.error(`Job ${job.id} failed: ${error}`),
       },
