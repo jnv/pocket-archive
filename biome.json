@@ -1,12 +1,12 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+  "files": {
+    "includes": ["src/**/*.ts"]
+  },
   "vcs": {
     "enabled": false,
     "clientKind": "git",
     "useIgnoreFile": false
-  },
-  "files": {
-    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
@@ -33,9 +33,14 @@
   },
   "overrides": [
     {
-      "includes": ["*.generated.ts"],
+      "includes": ["src/**/*.generated.ts"],
       "linter": {
         "enabled": false
+      },
+      "javascript": {
+        "linter": {
+          "enabled": false
+        }
       }
     }
   ]

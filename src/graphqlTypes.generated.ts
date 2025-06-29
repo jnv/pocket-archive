@@ -2,12 +2,12 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
-export type MakeOptional<T, K extends keyof T> =
-  & Omit<T, K>
-  & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> =
-  & Omit<T, K>
-  & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -4344,213 +4344,176 @@ export type GetSavedItemsQuery = { __typename?: 'Query' } & {
   user?: Maybe<
     { __typename?: 'User' } & {
       savedItems?: Maybe<
-        & { __typename?: 'SavedItemConnection' }
-        & Pick<
+        { __typename?: 'SavedItemConnection' } & Pick<
           SavedItemConnection,
           'totalCount'
-        >
-        & {
-          edges?: Maybe<
-            Array<
-              Maybe<
-                & { __typename?: 'SavedItemEdge' }
-                & Pick<
-                  SavedItemEdge,
-                  'cursor'
-                >
-                & {
-                  node?: Maybe<
-                    & { __typename: 'SavedItem' }
-                    & Pick<
-                      SavedItem,
-                      | '_createdAt'
-                      | '_updatedAt'
-                      | 'title'
-                      | 'url'
-                      | 'status'
-                      | 'isFavorite'
-                      | 'favoritedAt'
-                      | 'isArchived'
-                      | 'archivedAt'
-                    >
-                    & { savedId: SavedItem['id'] }
-                    & {
-                      item:
-                        | (
-                          & { __typename: 'PendingItem' }
-                          & Pick<
-                            PendingItem,
-                            'itemId' | 'status' | 'url'
-                          >
-                        )
-                        | (
-                          & { __typename: 'Item' }
-                          & Pick<
-                            Item,
-                            | 'isArticle'
-                            | 'hasImage'
-                            | 'hasVideo'
-                            | 'timeToRead'
-                            | 'itemId'
-                            | 'givenUrl'
-                          >
-                          & { shareId: Item['id'] }
-                          & {
-                            preview?: Maybe<
-                              | (
-                                & { __typename?: 'ItemSummary' }
-                                & Pick<
-                                  ItemSummary,
-                                  | 'excerpt'
-                                  | 'title'
-                                  | 'datePublished'
-                                  | 'url'
+        > & {
+            edges?: Maybe<
+              Array<
+                Maybe<
+                  { __typename?: 'SavedItemEdge' } & Pick<
+                    SavedItemEdge,
+                    'cursor'
+                  > & {
+                      node?: Maybe<
+                        { __typename: 'SavedItem' } & Pick<
+                          SavedItem,
+                          | '_createdAt'
+                          | '_updatedAt'
+                          | 'title'
+                          | 'url'
+                          | 'status'
+                          | 'isFavorite'
+                          | 'favoritedAt'
+                          | 'isArchived'
+                          | 'archivedAt'
+                        > & { savedId: SavedItem['id'] } & {
+                            item:
+                              | ({ __typename: 'PendingItem' } & Pick<
+                                  PendingItem,
+                                  'itemId' | 'status' | 'url'
+                                >)
+                              | ({ __typename: 'Item' } & Pick<
+                                  Item,
+                                  | 'isArticle'
+                                  | 'hasImage'
+                                  | 'hasVideo'
+                                  | 'timeToRead'
+                                  | 'itemId'
+                                  | 'givenUrl'
+                                > & { shareId: Item['id'] } & {
+                                    preview?: Maybe<
+                                      | ({ __typename?: 'ItemSummary' } & Pick<
+                                          ItemSummary,
+                                          | 'excerpt'
+                                          | 'title'
+                                          | 'datePublished'
+                                          | 'url'
+                                        > & { previewId: ItemSummary['id'] } & {
+                                            image?: Maybe<
+                                              { __typename?: 'Image' } & Pick<
+                                                Image,
+                                                'caption' | 'credit' | 'url'
+                                              > & {
+                                                  cachedImages?: Maybe<
+                                                    Array<
+                                                      Maybe<
+                                                        {
+                                                          __typename?: 'CachedImage';
+                                                        } & Pick<
+                                                          CachedImage,
+                                                          'url' | 'id'
+                                                        >
+                                                      >
+                                                    >
+                                                  >;
+                                                }
+                                            >;
+                                            authors?: Maybe<
+                                              Array<
+                                                {
+                                                  __typename?: 'Author';
+                                                } & Pick<Author, 'name'>
+                                              >
+                                            >;
+                                            domain?: Maybe<
+                                              {
+                                                __typename?: 'DomainMetadata';
+                                              } & Pick<DomainMetadata, 'name'>
+                                            >;
+                                          })
+                                      | ({ __typename?: 'OEmbed' } & Pick<
+                                          OEmbed,
+                                          | 'excerpt'
+                                          | 'title'
+                                          | 'datePublished'
+                                          | 'url'
+                                          | 'htmlEmbed'
+                                          | 'type'
+                                        > & { previewId: OEmbed['id'] } & {
+                                            image?: Maybe<
+                                              { __typename?: 'Image' } & Pick<
+                                                Image,
+                                                'caption' | 'credit' | 'url'
+                                              > & {
+                                                  cachedImages?: Maybe<
+                                                    Array<
+                                                      Maybe<
+                                                        {
+                                                          __typename?: 'CachedImage';
+                                                        } & Pick<
+                                                          CachedImage,
+                                                          'url' | 'id'
+                                                        >
+                                                      >
+                                                    >
+                                                  >;
+                                                }
+                                            >;
+                                            authors?: Maybe<
+                                              Array<
+                                                {
+                                                  __typename?: 'Author';
+                                                } & Pick<Author, 'name'>
+                                              >
+                                            >;
+                                            domain?: Maybe<
+                                              {
+                                                __typename?: 'DomainMetadata';
+                                              } & Pick<DomainMetadata, 'name'>
+                                            >;
+                                          })
+                                    >;
+                                  });
+                            tags?: Maybe<
+                              Array<
+                                { __typename?: 'Tag' } & Pick<
+                                  Tag,
+                                  'id' | 'name'
                                 >
-                                & { previewId: ItemSummary['id'] }
-                                & {
-                                  image?: Maybe<
-                                    & { __typename?: 'Image' }
-                                    & Pick<
-                                      Image,
-                                      'caption' | 'credit' | 'url'
-                                    >
-                                    & {
-                                      cachedImages?: Maybe<
-                                        Array<
-                                          Maybe<
-                                            & {
-                                              __typename?: 'CachedImage';
-                                            }
-                                            & Pick<
-                                              CachedImage,
-                                              'url' | 'id'
+                              >
+                            >;
+                            annotations?: Maybe<
+                              { __typename?: 'SavedItemAnnotations' } & {
+                                highlights?: Maybe<
+                                  Array<
+                                    Maybe<
+                                      { __typename?: 'Highlight' } & Pick<
+                                        Highlight,
+                                        | 'id'
+                                        | 'quote'
+                                        | 'patch'
+                                        | 'version'
+                                        | '_createdAt'
+                                        | '_updatedAt'
+                                      > & {
+                                          note?: Maybe<
+                                            {
+                                              __typename?: 'HighlightNote';
+                                            } & Pick<
+                                              HighlightNote,
+                                              | 'text'
+                                              | '_createdAt'
+                                              | '_updatedAt'
                                             >
-                                          >
-                                        >
-                                      >;
-                                    }
-                                  >;
-                                  authors?: Maybe<
-                                    Array<
-                                      {
-                                        __typename?: 'Author';
-                                      } & Pick<Author, 'name'>
+                                          >;
+                                        }
                                     >
-                                  >;
-                                  domain?: Maybe<
-                                    {
-                                      __typename?: 'DomainMetadata';
-                                    } & Pick<DomainMetadata, 'name'>
-                                  >;
-                                }
-                              )
-                              | (
-                                & { __typename?: 'OEmbed' }
-                                & Pick<
-                                  OEmbed,
-                                  | 'excerpt'
-                                  | 'title'
-                                  | 'datePublished'
-                                  | 'url'
-                                  | 'htmlEmbed'
-                                  | 'type'
-                                >
-                                & { previewId: OEmbed['id'] }
-                                & {
-                                  image?: Maybe<
-                                    & { __typename?: 'Image' }
-                                    & Pick<
-                                      Image,
-                                      'caption' | 'credit' | 'url'
-                                    >
-                                    & {
-                                      cachedImages?: Maybe<
-                                        Array<
-                                          Maybe<
-                                            & {
-                                              __typename?: 'CachedImage';
-                                            }
-                                            & Pick<
-                                              CachedImage,
-                                              'url' | 'id'
-                                            >
-                                          >
-                                        >
-                                      >;
-                                    }
-                                  >;
-                                  authors?: Maybe<
-                                    Array<
-                                      {
-                                        __typename?: 'Author';
-                                      } & Pick<Author, 'name'>
-                                    >
-                                  >;
-                                  domain?: Maybe<
-                                    {
-                                      __typename?: 'DomainMetadata';
-                                    } & Pick<DomainMetadata, 'name'>
-                                  >;
-                                }
-                              )
+                                  >
+                                >;
+                              }
                             >;
                           }
-                        );
-                      tags?: Maybe<
-                        Array<
-                          & { __typename?: 'Tag' }
-                          & Pick<
-                            Tag,
-                            'id' | 'name'
-                          >
-                        >
-                      >;
-                      annotations?: Maybe<
-                        { __typename?: 'SavedItemAnnotations' } & {
-                          highlights?: Maybe<
-                            Array<
-                              Maybe<
-                                & { __typename?: 'Highlight' }
-                                & Pick<
-                                  Highlight,
-                                  | 'id'
-                                  | 'quote'
-                                  | 'patch'
-                                  | 'version'
-                                  | '_createdAt'
-                                  | '_updatedAt'
-                                >
-                                & {
-                                  note?: Maybe<
-                                    & {
-                                      __typename?: 'HighlightNote';
-                                    }
-                                    & Pick<
-                                      HighlightNote,
-                                      | 'text'
-                                      | '_createdAt'
-                                      | '_updatedAt'
-                                    >
-                                  >;
-                                }
-                              >
-                            >
-                          >;
-                        }
                       >;
                     }
-                  >;
-                }
+                >
               >
-            >
-          >;
-          pageInfo:
-            & { __typename?: 'PageInfo' }
-            & Pick<
+            >;
+            pageInfo: { __typename?: 'PageInfo' } & Pick<
               PageInfo,
               'hasNextPage' | 'hasPreviousPage' | 'startCursor' | 'endCursor'
             >;
-        }
+          }
       >;
     }
   >;
@@ -4570,8 +4533,7 @@ export type GetSavedItemByIdQuery = { __typename?: 'Query' } & {
               highlights?: Maybe<
                 Array<
                   Maybe<
-                    & { __typename?: 'Highlight' }
-                    & Pick<
+                    { __typename?: 'Highlight' } & Pick<
                       Highlight,
                       | 'id'
                       | 'quote'
@@ -4579,29 +4541,24 @@ export type GetSavedItemByIdQuery = { __typename?: 'Query' } & {
                       | 'version'
                       | '_createdAt'
                       | '_updatedAt'
-                    >
-                    & {
-                      note?: Maybe<
-                        & { __typename?: 'HighlightNote' }
-                        & Pick<
-                          HighlightNote,
-                          'text' | '_createdAt' | '_updatedAt'
-                        >
-                      >;
-                    }
+                    > & {
+                        note?: Maybe<
+                          { __typename?: 'HighlightNote' } & Pick<
+                            HighlightNote,
+                            'text' | '_createdAt' | '_updatedAt'
+                          >
+                        >;
+                      }
                   >
                 >
               >;
             }
           >;
           item:
-            | (
-              & { __typename?: 'PendingItem' }
-              & Pick<
+            | ({ __typename?: 'PendingItem' } & Pick<
                 PendingItem,
                 'itemId' | 'status' | 'url'
-              >
-            )
+              >)
             | ({ __typename?: 'Item' } & ItemDetailsFragment);
         } & SavedItemDetailsFragment
       >;
@@ -4614,24 +4571,21 @@ export type GetSavedItemBySlugQueryVariables = Exact<{
 }>;
 
 export type GetSavedItemBySlugQuery = { __typename?: 'Query' } & {
-  readerSlug:
-    & { __typename?: 'ReaderViewResult' }
-    & Pick<
-      ReaderViewResult,
-      'slug'
-    >
-    & {
+  readerSlug: { __typename?: 'ReaderViewResult' } & Pick<
+    ReaderViewResult,
+    'slug'
+  > & {
       fallbackPage?: Maybe<
         | ({ __typename?: 'ReaderInterstitial' } & {
-          itemCard?: Maybe<
-            | ({ __typename?: 'ItemSummary' } & {
-              item?: Maybe<{ __typename?: 'Item' } & ItemDetailsFragment>;
-            })
-            | ({ __typename?: 'OEmbed' } & {
-              item?: Maybe<{ __typename?: 'Item' } & ItemDetailsFragment>;
-            })
-          >;
-        })
+            itemCard?: Maybe<
+              | ({ __typename?: 'ItemSummary' } & {
+                  item?: Maybe<{ __typename?: 'Item' } & ItemDetailsFragment>;
+                })
+              | ({ __typename?: 'OEmbed' } & {
+                  item?: Maybe<{ __typename?: 'Item' } & ItemDetailsFragment>;
+                })
+            >;
+          })
         | { __typename?: 'ItemNotFound' }
       >;
       savedItem?: Maybe<
@@ -4641,8 +4595,7 @@ export type GetSavedItemBySlugQuery = { __typename?: 'Query' } & {
               highlights?: Maybe<
                 Array<
                   Maybe<
-                    & { __typename?: 'Highlight' }
-                    & Pick<
+                    { __typename?: 'Highlight' } & Pick<
                       Highlight,
                       | 'id'
                       | 'quote'
@@ -4650,16 +4603,14 @@ export type GetSavedItemBySlugQuery = { __typename?: 'Query' } & {
                       | 'version'
                       | '_createdAt'
                       | '_updatedAt'
-                    >
-                    & {
-                      note?: Maybe<
-                        & { __typename?: 'HighlightNote' }
-                        & Pick<
-                          HighlightNote,
-                          'text' | '_createdAt' | '_updatedAt'
-                        >
-                      >;
-                    }
+                    > & {
+                        note?: Maybe<
+                          { __typename?: 'HighlightNote' } & Pick<
+                            HighlightNote,
+                            'text' | '_createdAt' | '_updatedAt'
+                          >
+                        >;
+                      }
                   >
                 >
               >;
@@ -4668,62 +4619,54 @@ export type GetSavedItemBySlugQuery = { __typename?: 'Query' } & {
           item:
             | { __typename?: 'PendingItem' }
             | ({ __typename?: 'Item' } & Pick<Item, 'article'> & {
-              relatedAfterArticle: Array<
-                { __typename?: 'CorpusRecommendation' } & {
-                  corpusRecommendationId: CorpusRecommendation['id'];
-                } & {
-                  corpusItem:
-                    & { __typename?: 'CorpusItem' }
-                    & Pick<
-                      CorpusItem,
-                      'publisher' | 'title' | 'id' | 'excerpt'
-                    >
-                    & {
-                      thumbnail: CorpusItem['imageUrl'];
-                      externalUrl: CorpusItem['url'];
-                      saveUrl: CorpusItem['url'];
-                    };
-                }
-              >;
-            } & ItemDetailsFragment);
+                  relatedAfterArticle: Array<
+                    { __typename?: 'CorpusRecommendation' } & {
+                      corpusRecommendationId: CorpusRecommendation['id'];
+                    } & {
+                      corpusItem: { __typename?: 'CorpusItem' } & Pick<
+                        CorpusItem,
+                        'publisher' | 'title' | 'id' | 'excerpt'
+                      > & {
+                          thumbnail: CorpusItem['imageUrl'];
+                          externalUrl: CorpusItem['url'];
+                          saveUrl: CorpusItem['url'];
+                        };
+                    }
+                  >;
+                } & ItemDetailsFragment);
         } & SavedItemDetailsFragment
       >;
     };
 };
 
-export type ItemDetailsFragment =
-  & { __typename?: 'Item' }
-  & Pick<
-    Item,
-    | 'isArticle'
-    | 'title'
-    | 'itemId'
-    | 'readerSlug'
-    | 'resolvedId'
-    | 'resolvedUrl'
-    | 'domain'
-    | 'excerpt'
-    | 'hasImage'
-    | 'hasVideo'
-    | 'topImageUrl'
-    | 'timeToRead'
-    | 'givenUrl'
-    | 'normalUrl'
-    | 'ssml'
-    | 'wordCount'
-    | 'datePublished'
-    | 'article'
-  >
-  & { shareId: Item['id'] }
-  & {
+export type ItemDetailsFragment = { __typename?: 'Item' } & Pick<
+  Item,
+  | 'isArticle'
+  | 'title'
+  | 'itemId'
+  | 'readerSlug'
+  | 'resolvedId'
+  | 'resolvedUrl'
+  | 'domain'
+  | 'excerpt'
+  | 'hasImage'
+  | 'hasVideo'
+  | 'topImageUrl'
+  | 'timeToRead'
+  | 'givenUrl'
+  | 'normalUrl'
+  | 'ssml'
+  | 'wordCount'
+  | 'datePublished'
+  | 'article'
+> & { shareId: Item['id'] } & {
     domainMetadata?: Maybe<
       { __typename?: 'DomainMetadata' } & Pick<DomainMetadata, 'name'>
     >;
     images?: Maybe<
       Array<
         Maybe<
-          & { __typename?: 'Image' }
-          & Pick<
+          { __typename?: 'Image' } & Pick<
             Image,
             'caption' | 'credit' | 'height' | 'imageId' | 'src' | 'width'
           >
@@ -4733,8 +4676,7 @@ export type ItemDetailsFragment =
     videos?: Maybe<
       Array<
         Maybe<
-          & { __typename?: 'Video' }
-          & Pick<
+          { __typename?: 'Video' } & Pick<
             Video,
             'vid' | 'videoId' | 'type' | 'src'
           >
@@ -4742,8 +4684,7 @@ export type ItemDetailsFragment =
       >
     >;
     collection?: Maybe<
-      & { __typename?: 'Collection' }
-      & Pick<
+      { __typename?: 'Collection' } & Pick<
         Collection,
         'imageUrl' | 'intro' | 'title' | 'excerpt'
       >
@@ -4755,39 +4696,34 @@ export type ItemDetailsFragment =
     >;
     syndicatedArticle?: Maybe<
       { __typename?: 'SyndicatedArticle' } & Pick<SyndicatedArticle, 'slug'> & {
-        publisher?: Maybe<
-          { __typename?: 'Publisher' } & Pick<Publisher, 'name' | 'url'>
-        >;
-      }
+          publisher?: Maybe<
+            { __typename?: 'Publisher' } & Pick<Publisher, 'name' | 'url'>
+          >;
+        }
     >;
   };
 
-export type SavedItemDetailsFragment =
-  & { __typename?: 'SavedItem' }
-  & Pick<
-    SavedItem,
-    | '_createdAt'
-    | '_updatedAt'
-    | '_version'
-    | 'id'
-    | 'title'
-    | 'url'
-    | 'status'
-    | 'isFavorite'
-    | 'favoritedAt'
-    | 'isArchived'
-    | 'archivedAt'
-  >
-  & { savedId: SavedItem['id'] }
-  & {
+export type SavedItemDetailsFragment = { __typename?: 'SavedItem' } & Pick<
+  SavedItem,
+  | '_createdAt'
+  | '_updatedAt'
+  | '_version'
+  | 'id'
+  | 'title'
+  | 'url'
+  | 'status'
+  | 'isFavorite'
+  | 'favoritedAt'
+  | 'isArchived'
+  | 'archivedAt'
+> & { savedId: SavedItem['id'] } & {
     tags?: Maybe<Array<{ __typename?: 'Tag' } & Pick<Tag, 'id' | 'name'>>>;
     annotations?: Maybe<
       { __typename?: 'SavedItemAnnotations' } & {
         highlights?: Maybe<
           Array<
             Maybe<
-              & { __typename?: 'Highlight' }
-              & Pick<
+              { __typename?: 'Highlight' } & Pick<
                 Highlight,
                 | '_createdAt'
                 | '_updatedAt'
@@ -4795,16 +4731,14 @@ export type SavedItemDetailsFragment =
                 | 'quote'
                 | 'patch'
                 | 'version'
-              >
-              & {
-                note?: Maybe<
-                  & { __typename?: 'HighlightNote' }
-                  & Pick<
-                    HighlightNote,
-                    'text' | '_createdAt' | '_updatedAt'
-                  >
-                >;
-              }
+              > & {
+                  note?: Maybe<
+                    { __typename?: 'HighlightNote' } & Pick<
+                      HighlightNote,
+                      'text' | '_createdAt' | '_updatedAt'
+                    >
+                  >;
+                }
             >
           >
         >;

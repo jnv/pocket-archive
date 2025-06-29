@@ -15,7 +15,9 @@ export class PocketStore {
 
   async init(): Promise<void> {
     await Promise.all(
-      Object.values(this.paths).map((subdir) => mkdir(subdir, { recursive: true })),
+      Object.values(this.paths).map((subdir) =>
+        mkdir(subdir, { recursive: true }),
+      ),
     );
   }
 
@@ -24,10 +26,7 @@ export class PocketStore {
   }
 
   writeQueueItem(itemId: string, queueItem: unknown): Promise<number> {
-    const edgePath = pathJoin(
-      this.paths.queueItems,
-      `${itemId}.json`,
-    );
+    const edgePath = pathJoin(this.paths.queueItems, `${itemId}.json`);
     return this.#writeFile(edgePath, queueItem);
   }
 

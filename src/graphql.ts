@@ -1,7 +1,7 @@
-import { gql, GraphQLClient } from 'graphql-request';
-import type { PocketCredentials } from './types.ts';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql';
+import { GraphQLClient, gql } from 'graphql-request';
+import { fetchRateLimited } from './fetchRateLimited.ts';
 import {
   type GetSavedItemByIdQuery,
   type GetSavedItemByIdQueryVariables,
@@ -9,11 +9,11 @@ import {
   type GetSavedItemBySlugQueryVariables,
   type GetSavedItemsQuery,
   type GetSavedItemsQueryVariables,
+  SavedItemStatusFilter,
   SavedItemsSortBy,
   SavedItemsSortOrder,
-  SavedItemStatusFilter,
 } from './graphqlTypes.generated.ts';
-import { fetchRateLimited } from './fetchRateLimited.ts';
+import type { PocketCredentials } from './types.ts';
 
 const GRAPHQL_BASE_URL = 'https://getpocket.com/graphql';
 
@@ -351,8 +351,7 @@ export function GraphqlClient({ consumerKey, accessToken }: PocketCredentials) {
     );
   }
 
-  const endpoint =
-    `${GRAPHQL_BASE_URL}?consumer_key=${consumerKey}&access_token=${accessToken}&enable_cors=1`;
+  const endpoint = `${GRAPHQL_BASE_URL}?consumer_key=${consumerKey}&access_token=${accessToken}&enable_cors=1`;
 
   const client = new GraphQLClient(endpoint, {
     fetch: fetchRateLimited,
@@ -398,4 +397,3 @@ export function GraphqlClient({ consumerKey, accessToken }: PocketCredentials) {
     },
   };
 }
-

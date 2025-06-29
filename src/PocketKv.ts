@@ -1,7 +1,14 @@
-import path from 'node:path';
-import { bun, defineQueue, defineWorker, JobStatus, type Worker, type Logger } from 'plainjob';
 import type Database from 'bun:sqlite';
+import path from 'node:path';
 import type { Queue } from 'plainjob';
+import {
+  bun,
+  defineQueue,
+  defineWorker,
+  JobStatus,
+  type Logger,
+  type Worker,
+} from 'plainjob';
 import type { ArticleFetchQueueItem } from './types';
 
 const QUEUE_NAME = 'article-fetch-queue';

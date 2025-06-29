@@ -52,9 +52,7 @@ export async function fetchRateLimited(
     );
   });
   if (!response) {
-    throw new Error(
-      'Fetch response is undefined. This should not happen.',
-    );
+    throw new Error('Fetch response is undefined. This should not happen.');
   }
 
   return response;
