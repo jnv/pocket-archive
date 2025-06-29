@@ -1,32 +1,47 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { bun, defineQueue, defineWorker, type Worker } from 'plainjob';
+import type Database from 'bun:sqlite';
+import type { Queue } from 'plainjob';
 import type { ArticleFetchQueueItem } from './types';
-import { JobQueue, Job } from 'plainjob';
-import fs from 'fs/promises';
+
+const QUEUE_NAME = 'article-fetch-queue';
 
 export class PocketKv {
-  queue: JobQueue<ArticleFetchQueueItem>;
+  queue: Queue;
   checkpointPath: string;
+  worker: Worker | undefined;
 
-  constructor(queuePath: string, checkpointPath: string) {
-    this.queue = new JobQueue<ArticleFetchQueueItem>({
-      path: queuePath,
-    });
-    this.checkpointPath = checkpointPath;
+  constructor(outputDir: string, queueDb: Database) {
+    const connection = bun(queueDb);
+    this.queue = defineQueue({ connection });
+    this.checkpointPath = path.join(outputDir, 'checkpoint.json');
   }
 
   async enqueue(queueItem: ArticleFetchQueueItem) {
-    const id = queueItem?.savedId ?? Date.now().toString();
-    await this.queue.add({ ...queueItem, _id: id });
+    this.queue.add(QUEUE_NAME, queueItem);
   }
 
-  async listenQueue(callback: (item: ArticleFetchQueueItem) => Promise<void>): Promise<void> {
-    for await (const job of this.queue) {
-      try {
-        await callback(job.data);
-        await job.done();
-      } catch (err) {
-        await job.fail(err);
-      }
-    }
+  async listenQueue(
+    callback: (item: ArticleFetchQueueItem) => Promise<void>,
+  ): Promise<void> {
+    this.worker = defineWorker(
+      QUEUE_NAME,
+      async (job) => {
+        const data = JSON.parse(job.data) as ArticleFetchQueueItem;
+        return callback(data);
+      },
+      {
+        queue: this.queue,
+        onFailed: (job, error) =>
+          console.error(`Job ${job.id} failed: ${error}`),
+      },
+    );
+    this.worker.start();
+  }
+
+  stop(): Promise<void> | undefined {
+    return this.worker?.stop();
   }
 
   async setCheckpoint(cursor: string) {
@@ -38,16 +53,8 @@ export class PocketKv {
       const data = await fs.readFile(this.checkpointPath, 'utf8');
       const obj = JSON.parse(data);
       return obj.cursor || null;
-    } catch (err) {
+    } catch {
       return null;
-    }
-  }
-
-  async reset() {
-    try {
-      await fs.unlink(this.checkpointPath);
-    } catch (err) {
-      // ignore if file does not exist
     }
   }
 }

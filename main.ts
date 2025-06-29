@@ -1,3 +1,7 @@
+import path from 'path';
+import fs from 'fs/promises';
+import { parseArgs } from 'node:util';
+import Database from 'bun:sqlite';
 import { PocketStore } from './PocketStore';
 import { GraphqlClient } from './graphql';
 import { PocketKv } from './PocketKv';
@@ -8,19 +12,13 @@ import type {
   PocketSavedItemWithSlug,
   PocketUnknownItem,
 } from './types';
-import path from 'path';
-import fs from 'fs/promises';
-import { parseArgs } from 'node:util';
-// If you see type errors for 'process', install @types/node: bun add -d @types/node
 
 const POCKET_CREDENTIALS: PocketCredentials = {
   accessToken: process.env.POCKET_ACCESS_TOKEN || '',
   consumerKey: process.env.POCKET_CONSUMER_KEY || '',
 };
 
-const QUEUE_PATH = 'queue.jsonl';
-const CHECKPOINT_PATH = 'checkpoint.json';
-const OUTPUT_DIR = '_data';
+const DEFAULT_OUTPUT_DIR = '_data';
 
 const pocketClient = GraphqlClient(POCKET_CREDENTIALS);
 
@@ -29,7 +27,7 @@ const { values: args } = parseArgs({
   options: {
     enqueue: { type: 'boolean', default: false },
     process: { type: 'boolean', default: false },
-    output: { type: 'string', default: OUTPUT_DIR, short: 'o' },
+    output: { type: 'string', default: DEFAULT_OUTPUT_DIR, short: 'o' },
   },
 });
 
@@ -43,9 +41,7 @@ async function listAllItems(kv: PocketKv) {
 
     while (hasNextPage) {
       const items = await pocketClient.getSavedItems(cursor);
-      if (
-        !items?.user?.savedItems?.edges
-      ) {
+      if (!items?.user?.savedItems?.edges) {
         console.log('No more saved items found.');
         break;
       }
@@ -73,9 +69,7 @@ async function listAllItems(kv: PocketKv) {
 }
 
 function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
-  return (
-    (o as PocketSavedItemWithSlug)?.__typename === 'Item'
-  );
+  return (o as PocketSavedItemWithSlug)?.__typename === 'Item';
 }
 
 async function getItemProcessor(outputDir: string) {
@@ -120,9 +114,10 @@ async function getItemProcessor(outputDir: string) {
 async function main() {
   const outputDir = args.output;
   await fs.mkdir(outputDir, { recursive: true });
-  const queuePath = path.join(outputDir, QUEUE_PATH);
-  const checkpointPath = path.join(outputDir, CHECKPOINT_PATH);
-  const pocketKv = new PocketKv(queuePath, checkpointPath);
+  const queueDb = new Database(path.join(outputDir, 'queue.db'), {
+    strict: true,
+  });
+  const pocketKv = new PocketKv(outputDir, queueDb);
 
   process.on('SIGINT', () => {
     process.exit(0);
@@ -135,9 +130,7 @@ async function main() {
   }
   if (args.process) {
     console.info('Processing items...');
-    promises.push(pocketKv.listenQueue(
-      await getItemProcessor(outputDir),
-    ));
+    promises.push(pocketKv.listenQueue(await getItemProcessor(outputDir)));
   }
 
   await Promise.all(promises);
