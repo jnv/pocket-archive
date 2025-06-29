@@ -12,6 +12,7 @@ import {
 import type { ArticleFetchQueueItem } from './types';
 
 const QUEUE_NAME = 'article-fetch-queue';
+const QUEUE_TIMEOUT = 120 * 60 * 1000; // 2 hours
 
 const consoleLogger: Logger = {
   info: console.info,
@@ -27,7 +28,7 @@ export class PocketKv {
 
   constructor(outputDir: string, queueDb: Database) {
     const connection = bun(queueDb);
-    this.queue = defineQueue({ connection });
+    this.queue = defineQueue({ connection, timeout: QUEUE_TIMEOUT });
     this.checkpointPath = path.join(outputDir, 'checkpoint.json');
   }
 
