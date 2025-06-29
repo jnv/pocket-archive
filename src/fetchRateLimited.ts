@@ -28,7 +28,7 @@ export async function fetchRateLimited(
       let waitMs = 1000 * 60 * 5; // default 5 minutes
       if (limitResetHeader) {
         const seconds = parseInt(limitResetHeader, 10);
-        if (!isNaN(seconds)) {
+        if (!Number.isNaN(seconds)) {
           waitMs = seconds * 1000;
         }
       } else {

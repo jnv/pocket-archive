@@ -31,39 +31,35 @@ const { values: args } = parseArgs({
 });
 
 async function listAllItems(kv: PocketKv) {
-  try {
-    let hasNextPage = true;
-    let cursor: string | null = await kv.getCheckpoint();
+  let hasNextPage = true;
+  let cursor: string | null = await kv.getCheckpoint();
+  if (cursor) {
+    console.info(`Resuming from cursor: ${cursor}`);
+  }
+
+  while (hasNextPage) {
+    const items = await pocketClient.getSavedItems(cursor);
+    if (!items?.user?.savedItems?.edges) {
+      console.log('No more saved items found.');
+      break;
+    }
+    let itemsCount = 0;
+    for (const edge of items.user.savedItems.edges) {
+      const node = edge?.node;
+      if (!node) {
+        console.warn('Skipping edge without node:', edge);
+        continue;
+      }
+      await kv.enqueue(node);
+      itemsCount++;
+    }
+    console.info(`Enqueued ${itemsCount} items`);
+
+    hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
+    cursor = items.user.savedItems.pageInfo.endCursor as string | null;
     if (cursor) {
-      console.info(`Resuming from cursor: ${cursor}`);
+      await kv.setCheckpoint(cursor);
     }
-
-    while (hasNextPage) {
-      const items = await pocketClient.getSavedItems(cursor);
-      if (!items?.user?.savedItems?.edges) {
-        console.log('No more saved items found.');
-        break;
-      }
-      let itemsCount = 0;
-      for (const edge of items.user.savedItems.edges) {
-        const node = edge?.node;
-        if (!node) {
-          console.warn('Skipping edge without node:', edge);
-          continue;
-        }
-        await kv.enqueue(node);
-        itemsCount++;
-      }
-      console.info(`Enqueued ${itemsCount} items`);
-
-      hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
-      cursor = items.user.savedItems.pageInfo.endCursor as string | null;
-      if (cursor) {
-        await kv.setCheckpoint(cursor);
-      }
-    }
-  } catch (error) {
-    throw error;
   }
   console.debug('Finished listing all items.');
 }
