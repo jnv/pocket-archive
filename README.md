@@ -1,17 +1,18 @@
-# Pocket archiver
+# Pocket Archiver
 
-A Deno application that fetches and archives Pocket saves including articles' full content.
+A Bun application that fetches and archives Pocket saves including articles' full content.
 
 > [!WARNING]
 > This project uses Pocket's private GraphQL API, which is not officially supported by Pocket. Abuse may lead to your account being banned. Use at your own risk.
 
 ## Requirements
 
-[Deno](https://deno.com/) v2.3 or later.
+[Bun](https://bun.sh/) v1.2 or later.
 
 ## Setup
 
 1. Clone this repository
+1. Install dependencies with `bun install`
 1. Obtain consumer key and access token (see [below for details](#obtaining-consumer-key-and-access-token))
 1. Create a `.env` file in the project root:
    ```
@@ -26,11 +27,11 @@ The application writes to `_data` directory by default.
 
 1. Enqueue bookmarks for processing
     ```shell
-    deno task enqueue
+    bun run enqueue
     ```
 1. Process queued bookmarks
     ```shell
-    deno task process
+    bun run process
     ```
 
 
@@ -42,7 +43,7 @@ The application writes to `_data` directory by default.
 You can invoke the main script directly (in this case to both enqueue and process in a single process):
 
 ```shell
-deno run --allow-all --unstable-kv main.ts --enqueue --process --output ./my_output_directory
+bun run src/main.ts --enqueue --process --output ./my_output_directory
 ```
 
 - `--enqueue`: Queue bookmarks for processing
@@ -61,7 +62,7 @@ deno run --allow-all --unstable-kv main.ts --enqueue --process --output ./my_out
 
 ### Consumer key
 
-To access Pocket's API you can use any consumer key issued by Pocket.
+To access Pocket's API you can use a consumer key issued by Pocket.
 
 The official (but untested) way is to [create a new application](https://getpocket.com/developer/apps/new) with "Retrieve" permission and platform set to "Desktop (other)".
 
@@ -77,10 +78,10 @@ Copy the `consumer_key` parameter from the URL and use it as your `POCKET_CONSUM
 
 ### Access token
 
-With consumer key you can obtain the access token using, for example [pocket-auth-cli](https://github.com/mheap/pocket-auth-cli) application. It works well under Deno:
+With consumer key you can obtain the access token using, for example [pocket-auth-cli] application. It works well with Bun:
 
 ```shell
-deno run --allow-read --allow-net --allow-env npm:pocket-auth-cli YOUR_CONSUMER_KEY
+bunx pocket-auth-cli YOUR_CONSUMER_KEY
 ```
 This will open a browser window where you can log in to your Pocket account and authorize the application. After that, it will print the access token to the console:
 
@@ -91,13 +92,17 @@ This will open a browser window where you can log in to your Pocket account and 
 Copy the `access_token` value and use it as your `POCKET_ACCESS_TOKEN` in `.env` file.
 
 > ![NOTE]
-> If you can't or don't want to use the `pocket-auth-cli`, I wrote [an article about Pocket authentication](https://www.bitoff.org/pocket-api-auth/) if you want to build it yourself. Check also [the official Pocket documentation](https://getpocket.com/developer/docs/authentication).
+> If you can't or don't want to use the `pocket-auth-cli`, I wrote [an article about Pocket authentication][bitoff-pocket] if you want to build it yourself. Check also [the official Pocket documentation](https://getpocket.com/developer/docs/authentication).
 
 ## Related resources
 
 - [pockexport] – Python application which uses Pocket's public API.
+- [pocket-auth-cli] – CLI application to obtain Pocket access token.
+- [Exploring Pocket API: Authorization][bitoff-pocket]
 
 [pockexport]: https://github.com/karlicoss/pockexport
+[bitoff-pocket]: https://www.bitoff.org/pocket-api-auth/
+[pocket-auth-cli]: https://github.com/mheap/pocket-auth-cli
 
 ## License
 
