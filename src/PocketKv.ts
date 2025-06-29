@@ -38,6 +38,7 @@ export class PocketKv {
   async listenQueue(
     callback: (item: ArticleFetchQueueItem) => Promise<void>,
   ): Promise<void> {
+    this.queue.requeueTimedOutJobs(0);
     this.worker = defineWorker(
       QUEUE_NAME,
       async (job) => {
