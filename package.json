@@ -1,6 +1,7 @@
 {
   "name": "pocket-archive",
   "private": true,
+  "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -13,5 +14,9 @@
     "graphql-request": "^7.2.0",
     "p-queue": "^8.1.0",
     "plainjob": "^0.0.14"
+  },
+  "scripts": {
+    "enqueue": "bun run src/main.ts --enqueue",
+    "process": "bun run src/main.ts --process"
   }
 }
