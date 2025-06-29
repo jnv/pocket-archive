@@ -1,9 +1,7 @@
-import { join as pathJoin } from '@std/path/join';
-import { exists } from '@std/fs/exists';
-import { ensureDir } from '@std/fs/ensure-dir';
-import { ArticleFetchQueueItem } from './types.ts';
+import { mkdir } from 'node:fs/promises';
+import { join as pathJoin } from 'node:path';
 
-export class PocketStore<TQueueItem> {
+export class PocketStore {
   readonly basePath: string;
   readonly paths: { queueItems: string; savedItems: string };
 
@@ -17,15 +15,15 @@ export class PocketStore<TQueueItem> {
 
   async init(): Promise<void> {
     await Promise.all(
-      Object.values(this.paths).map((subdir) => ensureDir(subdir)),
+      Object.values(this.paths).map((subdir) => mkdir(subdir, { recursive: true })),
     );
   }
 
-  #writeFile(filePath: string, data: unknown): Promise<void> {
-    return Deno.writeTextFile(filePath, JSON.stringify(data, null, 2));
+  #writeFile(filePath: string, data: unknown): Promise<number> {
+    return Bun.write(filePath, JSON.stringify(data, null, 2));
   }
 
-  writeQueueItem(itemId: string, queueItem: unknown): Promise<void> {
+  writeQueueItem(itemId: string, queueItem: unknown): Promise<number> {
     const edgePath = pathJoin(
       this.paths.queueItems,
       `${itemId}.json`,
@@ -39,10 +37,10 @@ export class PocketStore<TQueueItem> {
 
   savedItemExists(itemId: string): Promise<boolean> {
     const itemPath = this.#getSavedItemPath(itemId);
-    return exists(itemPath);
+    return Bun.file(itemPath).exists();
   }
 
-  writeSavedItem(itemId: string, data: unknown): Promise<void> {
+  writeSavedItem(itemId: string, data: unknown): Promise<number> {
     const itemPath = this.#getSavedItemPath(itemId);
     return this.#writeFile(itemPath, data);
   }

@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs/promises';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 import Database from 'bun:sqlite';
 import { PocketStore } from './PocketStore';
@@ -8,7 +8,6 @@ import { PocketKv } from './PocketKv';
 import type {
   ArticleFetchQueueItem,
   PocketCredentials,
-  PocketItem,
   PocketSavedItemWithSlug,
   PocketUnknownItem,
 } from './types';
@@ -73,7 +72,7 @@ function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
 }
 
 async function getItemProcessor(outputDir: string) {
-  const pocketStore = new PocketStore<PocketItem>(outputDir);
+  const pocketStore = new PocketStore(outputDir);
   await pocketStore.init();
   return async (queueItem: ArticleFetchQueueItem) => {
     try {
@@ -120,7 +119,9 @@ async function main() {
   const pocketKv = new PocketKv(outputDir, queueDb);
 
   process.on('SIGINT', () => {
-    process.exit(0);
+    pocketKv.stop().then(() => {
+      process.exit(0);
+    });
   });
 
   const promises: Promise<void>[] = [];

@@ -40,8 +40,8 @@ export class PocketKv {
     this.worker.start();
   }
 
-  stop(): Promise<void> | undefined {
-    return this.worker?.stop();
+  stop(): Promise<void> {
+    return this.worker?.stop() ?? Promise.resolve();
   }
 
   async setCheckpoint(cursor: string) {
