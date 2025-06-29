@@ -37,11 +37,9 @@ export async function fetchRateLimited(
           response,
         );
       }
+      console.debug(response);
       console.warn(
-        `Rate limit exceeded. Waiting for ${
-          waitMs / 1000
-        } seconds before retrying.`,
-        response,
+        `Rate limit exceeded. Waiting for ${waitMs / 1000} seconds before retrying.`,
       );
       queue.pause();
       await delay(waitMs);
