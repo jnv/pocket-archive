@@ -11,7 +11,7 @@ function delay(ms: number) {
 const MAX_ATTEMPTS = 3;
 
 export async function fetchRateLimited(
-  input: RequestInfo | URL,
+  input: string | Request | URL,
   init?: RequestInit,
 ): Promise<Response> {
   const response = await queue.add(async () => {
@@ -59,3 +59,5 @@ export async function fetchRateLimited(
 
   return response;
 }
+
+fetchRateLimited.preconnect = fetch.preconnect;

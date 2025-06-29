@@ -3,12 +3,12 @@ import type { PocketCredentials } from './types.ts';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql';
 import {
-  GetSavedItemByIdQuery,
-  GetSavedItemByIdQueryVariables,
-  GetSavedItemBySlugQuery,
-  GetSavedItemBySlugQueryVariables,
-  GetSavedItemsQuery,
-  GetSavedItemsQueryVariables,
+  type GetSavedItemByIdQuery,
+  type GetSavedItemByIdQueryVariables,
+  type GetSavedItemBySlugQuery,
+  type GetSavedItemBySlugQueryVariables,
+  type GetSavedItemsQuery,
+  type GetSavedItemsQueryVariables,
   SavedItemsSortBy,
   SavedItemsSortOrder,
   SavedItemStatusFilter,
@@ -398,3 +398,4 @@ export function GraphqlClient({ consumerKey, accessToken }: PocketCredentials) {
     },
   };
 }
+
