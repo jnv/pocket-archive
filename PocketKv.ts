@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { bun, defineQueue, defineWorker, JobStatus, type Worker, type Logger } from 'plainjob';
 import type Database from 'bun:sqlite';
@@ -59,14 +58,13 @@ export class PocketKv {
   }
 
   async setCheckpoint(cursor: string) {
-    await fs.writeFile(this.checkpointPath, JSON.stringify({ cursor }), 'utf8');
+    await Bun.write(this.checkpointPath, JSON.stringify({ cursor }));
   }
 
   async getCheckpoint(): Promise<string | null> {
     try {
-      const data = await fs.readFile(this.checkpointPath, 'utf8');
-      const obj = JSON.parse(data);
-      return obj.cursor || null;
+      const data = await Bun.file(this.checkpointPath).json();
+      return data.cursor || null;
     } catch {
       return null;
     }
