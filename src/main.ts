@@ -30,7 +30,7 @@ const { values: args } = parseArgs({
   },
 });
 
-async function listAllItems(kv: PocketKv) {
+async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
   let hasNextPage = true;
   let cursor: string | null = await kv.getCheckpoint();
   if (cursor) {
@@ -40,20 +40,25 @@ async function listAllItems(kv: PocketKv) {
   while (hasNextPage) {
     const items = await pocketClient.getSavedItems(cursor);
     if (!items?.user?.savedItems?.edges) {
-      console.log('No more saved items found.');
+      console.debug('No more saved items found.');
       break;
     }
     let itemsCount = 0;
-    for (const edge of items.user.savedItems.edges) {
-      const node = edge?.node;
-      if (!node) {
-        console.warn('Skipping edge without node:', edge);
-        continue;
-      }
-      await kv.enqueue(node);
-      itemsCount++;
-    }
-    console.info(`Enqueued ${itemsCount} items`);
+    await saveOrEnqueueItems(
+      kv,
+      pocketStore,
+      items.user.savedItems.edges.map((edge) => edge?.node),
+    );
+    // for (const edge of items.user.savedItems.edges) {
+    //   const node = edge?.node;
+    //   if (!node) {
+    //     console.warn('Skipping edge without node:', edge);
+    //     continue;
+    //   }
+    //   await kv.enqueue(node);
+    //   itemsCount++;
+    // }
+    console.info(`Saved ${itemsCount} items`);
 
     hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
     cursor = items.user.savedItems.pageInfo.endCursor as string | null;
@@ -61,7 +66,35 @@ async function listAllItems(kv: PocketKv) {
       await kv.setCheckpoint(cursor);
     }
   }
-  console.debug('Finished listing all items.');
+}
+
+async function saveOrEnqueueItems(
+  kv: PocketKv,
+  store: PocketStore,
+  items: ArticleFetchQueueItem[],
+): Promise<number> {
+  let processedCount = 0;
+  for (const queueItem of items) {
+    if (!queueItem?.savedId) {
+      console.warn('Skipping item without savedId:', queueItem);
+      continue;
+    }
+    const { savedId } = queueItem;
+
+    let slugId: string | undefined;
+    if (isItemWithSlug(queueItem.item)) {
+      slugId = queueItem.item.shareId;
+    }
+    if (slugId) {
+      await store.writeSavedItem(slugId, queueItem);
+      processedCount++;
+    } else {
+      console.info(`Enqueuing item without slug: ${savedId}`);
+      await store.writePartialItem(savedId, queueItem);
+      await kv.enqueue(queueItem);
+    }
+  }
+  return processedCount;
 }
 
 function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
@@ -78,28 +111,8 @@ async function getItemProcessor(outputDir: string) {
         return;
       }
       const { savedId } = queueItem;
-      let slugId: string | undefined;
-      if (isItemWithSlug(queueItem.item)) {
-        slugId = queueItem.item.shareId;
-      }
-
-      const slugOrItemId = slugId ?? savedId;
-
-      await pocketStore.writeQueueItem(slugOrItemId, queueItem);
-
-      if (await pocketStore.savedItemExists(slugOrItemId)) {
-        console.info(`Item already exists: ${slugOrItemId}`);
-        return;
-      }
-      console.info(`Processing item: ${slugOrItemId}`);
-      let data: unknown = null;
-      if (slugId) {
-        data = await pocketClient.getSavedItemBySlug(slugId);
-      } else {
-        data = await pocketClient.getSavedItemById(savedId);
-      }
-
-      await pocketStore.writeSavedItem(slugOrItemId, data);
+      const data = await pocketClient.getSavedItemById(savedId);
+      await pocketStore.writeSavedItem(savedId, data);
     } catch (error) {
       console.error('Error processing queue item:', queueItem, error);
       throw error;
@@ -135,6 +148,8 @@ async function main() {
     strict: true,
   });
   const pocketKv = new PocketKv(outputDir, queueDb);
+  const pocketStore = new PocketStore(outputDir);
+  await pocketStore.init();
 
   process.on('SIGINT', () => {
     pocketKv.stop().then(() => {
@@ -145,7 +160,7 @@ async function main() {
   const promises: Promise<void>[] = [];
   if (args.enqueue) {
     console.info('Enqueuing items...');
-    promises.push(listAllItems(pocketKv));
+    promises.push(listAllItems(pocketKv, pocketStore));
   }
   if (args.process) {
     console.info('Processing items...');

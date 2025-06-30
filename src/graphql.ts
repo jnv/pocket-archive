@@ -9,6 +9,8 @@ import {
   type GetSavedItemBySlugQueryVariables,
   type GetSavedItemsQuery,
   type GetSavedItemsQueryVariables,
+  type GetSavedItemsWithArticleQuery,
+  type GetSavedItemsWithArticleQueryVariables,
   SavedItemStatusFilter,
   SavedItemsSortBy,
   SavedItemsSortOrder,
@@ -344,6 +346,153 @@ const getSaveItemById: TypedDocumentNode<
   ${fragmentItemDetails}
 `);
 
+const getSavedItemsWithArticle: TypedDocumentNode<
+  GetSavedItemsWithArticleQuery,
+  GetSavedItemsWithArticleQueryVariables
+> = parse(gql`
+  query getSavedItemsWithArticle($filter: SavedItemsFilter, $sort: SavedItemsSort, $pagination: PaginationInput) {
+    user {
+      savedItems(filter: $filter, sort: $sort, pagination: $pagination) {
+        edges {
+          cursor
+        node {
+          __typename
+          item {
+            __typename
+            ... on PendingItem {
+              itemId
+              status
+              url
+            }
+            ... on Item {
+              isArticle
+              title
+              shareId: id
+              itemId
+              readerSlug
+              resolvedId
+              resolvedUrl
+              domain
+              domainMetadata {
+                name
+              }
+              excerpt
+              hasImage
+              hasVideo
+              images {
+                caption
+                credit
+                height
+                imageId
+                src
+                width
+              }
+              videos {
+                vid
+                videoId
+                type
+                src
+              }
+              topImageUrl
+              timeToRead
+              givenUrl
+              normalUrl
+              ssml
+              wordCount
+              collection {
+                imageUrl
+                intro
+                title
+                excerpt
+              }
+              authors {
+                id
+                name
+                url
+              }
+              datePublished
+              syndicatedArticle {
+                slug
+                publisher {
+                  name
+                  url
+                }
+              }
+              article
+              preview {
+								previewId: id
+                excerpt
+                title
+                authors {
+                  id
+                  name
+                  url
+                }
+                domain {
+                  name
+                }
+                datePublished
+                url
+                image {
+                  caption
+                  credit
+                  url
+                  cachedImages(imageOptions: [{id: "WebPImage", fileType: WEBP, width: 640}]) {
+                    url
+                    id
+                  }
+                }
+								source
+                ... on OEmbed {
+                  htmlEmbed
+                  type
+                }
+              }
+            }
+          }
+          _createdAt
+          _updatedAt
+          title
+          url
+          savedId: id
+          status
+          isFavorite
+          favoritedAt
+          isArchived
+          archivedAt
+          tags {
+            id
+            name
+          }
+          annotations {
+            highlights {
+              id
+              quote
+              patch
+              version
+              _createdAt
+              _updatedAt
+              note {
+                text
+                _createdAt
+                _updatedAt
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
+`);
+
 export function GraphqlClient({ consumerKey, accessToken }: PocketCredentials) {
   if (!consumerKey || !accessToken) {
     throw new Error(
@@ -376,7 +525,7 @@ export function GraphqlClient({ consumerKey, accessToken }: PocketCredentials) {
     getSavedItems(cursor?: string | null) {
       const pagination = cursor ? { after: cursor } : undefined;
       try {
-        return client.request(getSavedItemsIds, {
+        return client.request(getSavedItemsWithArticle, {
           pagination,
           filter: {
             statuses: [

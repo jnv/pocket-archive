@@ -4334,6 +4334,273 @@ export enum VideoType {
   Dailymotion = 'DAILYMOTION',
 }
 
+export type GetSavedItemsWithArticleQueryVariables = Exact<{
+  filter?: Maybe<SavedItemsFilter>;
+  sort?: Maybe<SavedItemsSort>;
+  pagination?: Maybe<PaginationInput>;
+}>;
+
+export type GetSavedItemsWithArticleQuery = { __typename?: 'Query' } & {
+  user?: Maybe<
+    { __typename?: 'User' } & {
+      savedItems?: Maybe<
+        { __typename?: 'SavedItemConnection' } & Pick<
+          SavedItemConnection,
+          'totalCount'
+        > & {
+            edges?: Maybe<
+              Array<
+                Maybe<
+                  { __typename?: 'SavedItemEdge' } & Pick<
+                    SavedItemEdge,
+                    'cursor'
+                  > & {
+                      node?: Maybe<
+                        { __typename: 'SavedItem' } & Pick<
+                          SavedItem,
+                          | '_createdAt'
+                          | '_updatedAt'
+                          | 'title'
+                          | 'url'
+                          | 'status'
+                          | 'isFavorite'
+                          | 'favoritedAt'
+                          | 'isArchived'
+                          | 'archivedAt'
+                        > & { savedId: SavedItem['id'] } & {
+                            item:
+                              | ({ __typename: 'PendingItem' } & Pick<
+                                  PendingItem,
+                                  'itemId' | 'status' | 'url'
+                                >)
+                              | ({ __typename: 'Item' } & Pick<
+                                  Item,
+                                  | 'isArticle'
+                                  | 'title'
+                                  | 'itemId'
+                                  | 'readerSlug'
+                                  | 'resolvedId'
+                                  | 'resolvedUrl'
+                                  | 'domain'
+                                  | 'excerpt'
+                                  | 'hasImage'
+                                  | 'hasVideo'
+                                  | 'topImageUrl'
+                                  | 'timeToRead'
+                                  | 'givenUrl'
+                                  | 'normalUrl'
+                                  | 'ssml'
+                                  | 'wordCount'
+                                  | 'datePublished'
+                                  | 'article'
+                                > & { shareId: Item['id'] } & {
+                                    domainMetadata?: Maybe<
+                                      { __typename?: 'DomainMetadata' } & Pick<
+                                        DomainMetadata,
+                                        'name'
+                                      >
+                                    >;
+                                    images?: Maybe<
+                                      Array<
+                                        Maybe<
+                                          { __typename?: 'Image' } & Pick<
+                                            Image,
+                                            | 'caption'
+                                            | 'credit'
+                                            | 'height'
+                                            | 'imageId'
+                                            | 'src'
+                                            | 'width'
+                                          >
+                                        >
+                                      >
+                                    >;
+                                    videos?: Maybe<
+                                      Array<
+                                        Maybe<
+                                          { __typename?: 'Video' } & Pick<
+                                            Video,
+                                            'vid' | 'videoId' | 'type' | 'src'
+                                          >
+                                        >
+                                      >
+                                    >;
+                                    collection?: Maybe<
+                                      { __typename?: 'Collection' } & Pick<
+                                        Collection,
+                                        | 'imageUrl'
+                                        | 'intro'
+                                        | 'title'
+                                        | 'excerpt'
+                                      >
+                                    >;
+                                    authors?: Maybe<
+                                      Array<
+                                        Maybe<
+                                          { __typename?: 'Author' } & Pick<
+                                            Author,
+                                            'id' | 'name' | 'url'
+                                          >
+                                        >
+                                      >
+                                    >;
+                                    syndicatedArticle?: Maybe<
+                                      {
+                                        __typename?: 'SyndicatedArticle';
+                                      } & Pick<SyndicatedArticle, 'slug'> & {
+                                          publisher?: Maybe<
+                                            { __typename?: 'Publisher' } & Pick<
+                                              Publisher,
+                                              'name' | 'url'
+                                            >
+                                          >;
+                                        }
+                                    >;
+                                    preview?: Maybe<
+                                      | ({ __typename?: 'ItemSummary' } & Pick<
+                                          ItemSummary,
+                                          | 'excerpt'
+                                          | 'title'
+                                          | 'datePublished'
+                                          | 'url'
+                                          | 'source'
+                                        > & { previewId: ItemSummary['id'] } & {
+                                            authors?: Maybe<
+                                              Array<
+                                                {
+                                                  __typename?: 'Author';
+                                                } & Pick<
+                                                  Author,
+                                                  'id' | 'name' | 'url'
+                                                >
+                                              >
+                                            >;
+                                            domain?: Maybe<
+                                              {
+                                                __typename?: 'DomainMetadata';
+                                              } & Pick<DomainMetadata, 'name'>
+                                            >;
+                                            image?: Maybe<
+                                              { __typename?: 'Image' } & Pick<
+                                                Image,
+                                                'caption' | 'credit' | 'url'
+                                              > & {
+                                                  cachedImages?: Maybe<
+                                                    Array<
+                                                      Maybe<
+                                                        {
+                                                          __typename?: 'CachedImage';
+                                                        } & Pick<
+                                                          CachedImage,
+                                                          'url' | 'id'
+                                                        >
+                                                      >
+                                                    >
+                                                  >;
+                                                }
+                                            >;
+                                          })
+                                      | ({ __typename?: 'OEmbed' } & Pick<
+                                          OEmbed,
+                                          | 'htmlEmbed'
+                                          | 'type'
+                                          | 'excerpt'
+                                          | 'title'
+                                          | 'datePublished'
+                                          | 'url'
+                                          | 'source'
+                                        > & { previewId: OEmbed['id'] } & {
+                                            authors?: Maybe<
+                                              Array<
+                                                {
+                                                  __typename?: 'Author';
+                                                } & Pick<
+                                                  Author,
+                                                  'id' | 'name' | 'url'
+                                                >
+                                              >
+                                            >;
+                                            domain?: Maybe<
+                                              {
+                                                __typename?: 'DomainMetadata';
+                                              } & Pick<DomainMetadata, 'name'>
+                                            >;
+                                            image?: Maybe<
+                                              { __typename?: 'Image' } & Pick<
+                                                Image,
+                                                'caption' | 'credit' | 'url'
+                                              > & {
+                                                  cachedImages?: Maybe<
+                                                    Array<
+                                                      Maybe<
+                                                        {
+                                                          __typename?: 'CachedImage';
+                                                        } & Pick<
+                                                          CachedImage,
+                                                          'url' | 'id'
+                                                        >
+                                                      >
+                                                    >
+                                                  >;
+                                                }
+                                            >;
+                                          })
+                                    >;
+                                  });
+                            tags?: Maybe<
+                              Array<
+                                { __typename?: 'Tag' } & Pick<
+                                  Tag,
+                                  'id' | 'name'
+                                >
+                              >
+                            >;
+                            annotations?: Maybe<
+                              { __typename?: 'SavedItemAnnotations' } & {
+                                highlights?: Maybe<
+                                  Array<
+                                    Maybe<
+                                      { __typename?: 'Highlight' } & Pick<
+                                        Highlight,
+                                        | 'id'
+                                        | 'quote'
+                                        | 'patch'
+                                        | 'version'
+                                        | '_createdAt'
+                                        | '_updatedAt'
+                                      > & {
+                                          note?: Maybe<
+                                            {
+                                              __typename?: 'HighlightNote';
+                                            } & Pick<
+                                              HighlightNote,
+                                              | 'text'
+                                              | '_createdAt'
+                                              | '_updatedAt'
+                                            >
+                                          >;
+                                        }
+                                    >
+                                  >
+                                >;
+                              }
+                            >;
+                          }
+                      >;
+                    }
+                >
+              >
+            >;
+            pageInfo: { __typename?: 'PageInfo' } & Pick<
+              PageInfo,
+              'hasNextPage' | 'hasPreviousPage' | 'startCursor' | 'endCursor'
+            >;
+          }
+      >;
+    }
+  >;
+};
+
 export type GetSavedItemsQueryVariables = Exact<{
   filter?: Maybe<SavedItemsFilter>;
   sort?: Maybe<SavedItemsSort>;

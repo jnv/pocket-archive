@@ -43,4 +43,9 @@ export class PocketStore {
     const itemPath = this.#getSavedItemPath(itemId);
     return this.#writeFile(itemPath, data);
   }
+
+  writePartialItem(itemId: string, data: unknown): Promise<number> {
+    const itemPath = pathJoin(this.paths.queueItems, `${itemId}.json`);
+    return this.#writeFile(itemPath, data);
+  }
 }
