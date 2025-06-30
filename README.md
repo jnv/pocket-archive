@@ -23,32 +23,29 @@ A Bun application that fetches and archives Pocket saves including articles' ful
 
 ## Usage
 
-The application writes to `_data` directory by default.
+Run:
 
-1. Enqueue bookmarks for processing
-    ```shell
-    bun run enqueue
-    ```
-1. Process queued bookmarks
-    ```shell
-    bun run process
-    ```
+```shell
+bun start
+```
+
+The application fetches articles and writes raw JSON dumps to `_data` directory by default.
+
+After all articles are fetched, there's an additional attempt to fetch more details about "pending items" (usually items Pocket failed to fetch or are no longer available).
 
 ### Command line options
 
-You can invoke the main script directly (in this case to both enqueue and process in a single process):
+You can invoke the main script directly with custom options:
 
 ```shell
-bun run src/main.ts --enqueue --process --output ./my_output_directory
+bun run src/main.ts --output ./my_output_directory
 ```
 
-- `--enqueue`: Queue bookmarks for processing
-- `--process`: Process queued bookmarks
-- `--output <dir>`: Specify output directory (default: `_data`)
+- `--output <dir>` (or `-o <dir>`): Specify output directory (default: `_data`)
 
 ## Notes
 
-- The application dumps raw JSON data from GraphQL API.
+- The application dumps raw JSON data from GraphQL API (see [example document](docs/example.json)).
 - The application uses and shows Pocket's rate limiting; when the limit is reached, the application pauses until the limit resets. (From my testing the limit is usually 500 requests per hour.)
 - Enqueueing stores the last known cursor, so it resumes when interrupted.
 - Items are stored by their slug ID when available, otherwise by saved ID (typically for unprocessed items).
