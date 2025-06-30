@@ -51,6 +51,21 @@ bun run src/main.ts --output ./my_output_directory
 - Items are stored by their slug ID when available, otherwise by saved ID (typically for unprocessed items).
 - Existing items are skipped to avoid unnecessary re-processing.
 
+## Output directory structure
+
+The application creates the following structure in the output directory (`_data` by default):
+
+```
+_data/
+├── checkpoint.json          # Stores the last processed cursor for resuming
+├── queue.db                 # Database for persisting the processing queue
+├── saved_items/             # Successfully processed items with full content
+│   ├── {item_id}.json       # Items with slug IDs (preferred naming)
+│   └── {saved_id}.json      # Items without slug IDs (fallback naming)
+└── partial_items/           # Items that couldn't be fully processed
+    └── {item_id}.json       # Incomplete or failed items
+```
+
 ## Obtaining consumer key and access token
 
 ### Consumer key
@@ -89,6 +104,7 @@ Copy the `access_token` value and use it as your `POCKET_ACCESS_TOKEN` in `.env`
 
 ## Related resources
 
+- [pocket-exporter](https://github.com/ArchiveBox/pocket-exporter) – Much more advanced web app which also archives images and provides a (paid) hosted service.
 - [pockexport] – Python application which uses Pocket's public API.
 - [pocket-auth-cli] – CLI application to obtain Pocket access token.
 - [Exploring Pocket API: Authorization][bitoff-pocket]
