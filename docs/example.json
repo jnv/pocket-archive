@@ -1,0 +1,99 @@
+{
+  "__typename": "SavedItem",
+  "item": {
+    "__typename": "Item",
+    "isArticle": true,
+    "title": "Exploring Pocket API: Authorization",
+    "shareId": "f43T2A16g296dX2b60dY311w39pdg727cH7qd8r2aKK078Kvf9930Sd3W45yz9fu_1b5dd6069d1fc70444f66457ab05dd3f",
+    "itemId": "3789569881",
+    "readerSlug": "f43T2A16g296dX2b60dY311w39pdg727cH7qd8r2aKK078Kvf9930Sd3W45yz9fu_1b5dd6069d1fc70444f66457ab05dd3f",
+    "resolvedId": "3789569881",
+    "resolvedUrl": "https://www.bitoff.org/pocket-api-auth/",
+    "domain": null,
+    "domainMetadata": {
+      "name": "www.bitoff.org"
+    },
+    "excerpt": "I've been using Pocket for quite some time. Recently, I wanted to build something on top of their API. I've collected my notes and thoughts on Pocket API as a future reference for myself. Perhaps it will be useful to you. The first thing I needed to figure out was authorization.",
+    "hasImage": "HAS_IMAGES",
+    "hasVideo": "NO_VIDEOS",
+    "images": [
+      {
+        "caption": "",
+        "credit": "",
+        "height": 540,
+        "imageId": 1,
+        "src": "https://www.bitoff.org/img/generated/trnDhK_EXp-927.svg",
+        "width": 927
+      },
+      {
+        "caption": "",
+        "credit": "",
+        "height": 620,
+        "imageId": 2,
+        "src": "https://www.bitoff.org/img/generated/dSjBaDRZYr-927.svg",
+        "width": 927
+      }
+    ],
+    "videos": null,
+    "topImageUrl": null,
+    "timeToRead": 3,
+    "givenUrl": "https://www.bitoff.org/pocket-api-auth/",
+    "normalUrl": "http://bitoff.org/pocket-api-auth",
+    "ssml": "<speak><prosody rate='medium' volume='medium'>Exploring Pocket API: Authorization, published by www.bitoff.org, on <say-as interpret-as='date' format='m/d/y'>1/18/2023</say-as></prosody><prosody rate='medium' volume='medium'> \n I've been using  Pocket  for quite some time. Recently, I wanted to build something on top of their API. I've collected my notes and thoughts on Pocket API as a future reference for myself. Perhaps it will be useful to you. \n The first thing I needed to figure out was authorization. The good news is the authorization flow is  well documented . The bad news is immediately in the first sentence: \n \n The Pocket Authentication API uses  a variant of OAuth 2.0  for authentication. \n \n (Emphasis mine.) \n \"Variant of OAuth 2.0\" reeks of custom authorization schemes, which usually spells trouble. But while Pocket's authentication scheme is non-standard, it's actually closer to OAuth  1.0  flow with \"temporary credentials\". Minus all the request signing characteristic for OAuth 1.0. \n Pocket authorization vs. OAuth 2.0 Authorization Code Flow \n My simple understanding of a typical OAuth 2.0 Authorization Code Flow is this: \n     \n \n OAuth 2.0 Authorization Code Flow (very simplified) \n \n \n The consumer application identifies itself by the client ID. The provider also keeps a list of allowed callback URLs, so it's not possible to steal the authorization code by redirecting the user to a malicious app. \n Pocket's authorization flow is a bit different: \n     \n \n Pocket authorization flow (very simplified) \n \n \n The consumer app asks for a request token (\"temporary credentials\") at the beginning of the flow, which it later exchanges for an access token. It's like getting a blank ticket and later validating it. \n In the Authorization Code Flow, the provider adds the authorization code to the callback URL, so there's no need to store any state during the authorization. In case of Pocket's flow, the request token needs to be stored somewhere, typically in a session or in a cookie. \n On the other hand, Pocket doesn't need to know a list of allowed URLs. Even if the user were redirected to a malicious client app, it wouldn't know the original request token and couldn't exchange it for an access token. \n The current version of Pocket API was  introduced in 2012  which is the same year when OAuth 2.0 was finished. So, I think the authorization scheme ended up somewhere in between OAuth 1.0 and 2.0: it's mostly OAuth 1.0 flow without requests signing, which was also removed in OAuth 2.0. \n Pocket authorization in Node.js \n Since no API client tool like Postman or Hoppscotch can handle Pocket's authorization scheme, I had to implement it on my own. \n Luckily, there are a few Node.js libraries handling the scheme, but most of them are over 5 years old. I've picked  pocket-auth  by Michael Heap, and got my access token with this code modified from the library's example: \n   const  auth  =   require  (  \"pocket-auth\"  )  ; \n const  consumerKey  =   \"redacted\"  ; \n const  redirectUri  =   \"https://example.com\"  ; \n\n async   function   main  (  )   { \n   try   { \n     let  code  =   await  auth .  fetchToken  ( consumerKey ,  redirectUri ,   {  }  )  ; \n     let  uri  =  auth .  getRedirectUrl  ( code . code ,  redirectUri )  ; \n    console .  log  ( \n       \"Visit the following URL and click approve in the next 10 seconds:\" \n     )  ; \n    console .  log  ( uri )  ; \n\n     setTimeout  (  async   function   (  )   { \n       try   { \n         let  r  =   await  auth .  getAccessToken  ( consumerKey ,  code . code )  ; \n        console .  log  ( r )  ; \n       }   catch   ( err )   { \n        console .  error  ( err )  ; \n        console .  log  ( \n           \"You didn't click the link and approve the application in time\" \n         )  ; \n       } \n     }  ,   20000  )  ; \n   }   catch   ( err )   { \n    console .  log  ( err )  ; \n   } \n } \n\n main  (  )  ;   \n The script will show a URL with the request token, and after 20 seconds it attempts to grab the access key - meanwhile, you need to authorize access to Pocket. \n Only later I've found that Michael also built a  CLI tool for pocket-auth , which is much more convenient. Just run the tool with consumer key as argument, and it will handle the whole flow. \n  $ npx pocket-auth-cli   Pocket consumer key  \nOpening web browser to authorize application\nPress CTRL+C to cancel\n {  access_token:  'redacted' , username:  'redacted'   }   \n Onto retrieval \n This was a distracting but necessary step to get access to Pocket's API. Now it's time to retrieve some articles - but let's keep it for another time. \n </prosody></speak>",
+    "wordCount": 619,
+    "collection": null,
+    "authors": [
+      {
+        "id": "192146114",
+        "name": "Jan Vlnas",
+        "url": "https://jan.vlnas.cz"
+      }
+    ],
+    "datePublished": "2023-01-18 00:00:00",
+    "syndicatedArticle": null,
+    "article": "<div  lang=\"en\">\n<p nodeIndex=\"8\">I've been using <a href=\"https://getpocket.com/\" nodeIndex=\"39\">Pocket</a> for quite some time. Recently, I wanted to build something on top of their API. I've collected my notes and thoughts on Pocket API as a future reference for myself. Perhaps it will be useful to you.</p>\n<p nodeIndex=\"9\">The first thing I needed to figure out was authorization. The good news is the authorization flow is <a href=\"https://getpocket.com/developer/docs/authentication\" nodeIndex=\"40\">well documented</a>. The bad news is immediately in the first sentence:</p>\n<blockquote nodeIndex=\"10\">\n<p nodeIndex=\"11\">The Pocket Authentication API uses <em nodeIndex=\"41\">a variant of OAuth 2.0</em> for authentication.</p>\n</blockquote>\n<p nodeIndex=\"12\">(Emphasis mine.)</p>\n<p nodeIndex=\"13\">&ldquo;Variant of OAuth 2.0&rdquo; reeks of custom authorization schemes, which usually spells trouble. But while Pocket's authentication scheme is non-standard, it's actually closer to OAuth <em nodeIndex=\"42\">1.0</em> flow with &ldquo;temporary credentials&rdquo;. Minus all the request signing characteristic for OAuth 1.0.</p>\n<h2 tabindex=\"-1\" nodeIndex=\"14\">Pocket authorization vs. OAuth 2.0 Authorization Code Flow</h2>\n<p nodeIndex=\"15\">My simple understanding of a typical OAuth 2.0 Authorization Code Flow is this:</p>\n<figure nodeIndex=\"43\"><a href=\"https://www.bitoff.org/img/generated/trnDhK_EXp-927.svg\" nodeIndex=\"44\"><div id=\"RIL_IMG_1\" class=\"RIL_IMG\"></div></a>\n<figcaption nodeIndex=\"17\">\n<p nodeIndex=\"16\">OAuth 2.0 Authorization Code Flow (very simplified)</p>\n</figcaption>\n</figure>\n<p nodeIndex=\"18\">The consumer application identifies itself by the client ID. The provider also keeps a list of allowed callback URLs, so it's not possible to steal the authorization code by redirecting the user to a malicious app.</p>\n<p nodeIndex=\"19\">Pocket's authorization flow is a bit different:</p>\n<figure nodeIndex=\"46\"><a href=\"https://www.bitoff.org/img/generated/dSjBaDRZYr-927.svg\" nodeIndex=\"47\"><div id=\"RIL_IMG_2\" class=\"RIL_IMG\"></div></a>\n<figcaption nodeIndex=\"21\">\n<p nodeIndex=\"20\">Pocket authorization flow (very simplified)</p>\n</figcaption>\n</figure>\n<p nodeIndex=\"22\">The consumer app asks for a request token (&ldquo;temporary credentials&rdquo;) at the beginning of the flow, which it later exchanges for an access token. It's like getting a blank ticket and later validating it.</p>\n<p nodeIndex=\"23\">In the Authorization Code Flow, the provider adds the authorization code to the callback URL, so there's no need to store any state during the authorization. In case of Pocket's flow, the request token needs to be stored somewhere, typically in a session or in a cookie.</p>\n<p nodeIndex=\"24\">On the other hand, Pocket doesn't need to know a list of allowed URLs. Even if the user were redirected to a malicious client app, it wouldn't know the original request token and couldn't exchange it for an access token.</p>\n<p nodeIndex=\"25\">The current version of Pocket API was <a href=\"https://blog.getpocket.com/2012/11/introducing-the-new-pocket-api-for-developers-and-publishers/\" nodeIndex=\"49\">introduced in 2012</a> which is the same year when OAuth 2.0 was finished. So, I think the authorization scheme ended up somewhere in between OAuth 1.0 and 2.0: it's mostly OAuth 1.0 flow without requests signing, which was also removed in OAuth 2.0.</p>\n<h2 tabindex=\"-1\" nodeIndex=\"26\">Pocket authorization in Node.js</h2>\n<p nodeIndex=\"27\">Since no API client tool like Postman or Hoppscotch can handle Pocket's authorization scheme, I had to implement it on my own.</p>\n<p nodeIndex=\"28\">Luckily, there are a few Node.js libraries handling the scheme, but most of them are over 5 years old. I've picked <a href=\"https://github.com/mheap/pocket-auth\" nodeIndex=\"50\">pocket-auth</a> by Michael Heap, and got my access token with this code modified from the library's example:</p>\n<pre nodeIndex=\"29\"><code nodeIndex=\"51\"><span nodeIndex=\"52\">const</span> auth <span nodeIndex=\"53\">=</span> <span nodeIndex=\"54\">require</span><span nodeIndex=\"55\">(</span><span nodeIndex=\"56\">\"pocket-auth\"</span><span nodeIndex=\"57\">)</span><span nodeIndex=\"58\">;</span>\n<span nodeIndex=\"59\">const</span> consumerKey <span nodeIndex=\"60\">=</span> <span nodeIndex=\"61\">\"&lt;redacted&gt;\"</span><span nodeIndex=\"62\">;</span>\n<span nodeIndex=\"63\">const</span> redirectUri <span nodeIndex=\"64\">=</span> <span nodeIndex=\"65\">\"https://example.com\"</span><span nodeIndex=\"66\">;</span>\n\n<span nodeIndex=\"67\">async</span> <span nodeIndex=\"68\">function</span> <span nodeIndex=\"69\">main</span><span nodeIndex=\"70\">(</span><span nodeIndex=\"71\">)</span> <span nodeIndex=\"72\">{</span>\n  <span nodeIndex=\"73\">try</span> <span nodeIndex=\"74\">{</span>\n    <span nodeIndex=\"75\">let</span> code <span nodeIndex=\"76\">=</span> <span nodeIndex=\"77\">await</span> auth<span nodeIndex=\"78\">.</span><span nodeIndex=\"79\">fetchToken</span><span nodeIndex=\"80\">(</span>consumerKey<span nodeIndex=\"81\">,</span> redirectUri<span nodeIndex=\"82\">,</span> <span nodeIndex=\"83\">{</span><span nodeIndex=\"84\">}</span><span nodeIndex=\"85\">)</span><span nodeIndex=\"86\">;</span>\n    <span nodeIndex=\"87\">let</span> uri <span nodeIndex=\"88\">=</span> auth<span nodeIndex=\"89\">.</span><span nodeIndex=\"90\">getRedirectUrl</span><span nodeIndex=\"91\">(</span>code<span nodeIndex=\"92\">.</span>code<span nodeIndex=\"93\">,</span> redirectUri<span nodeIndex=\"94\">)</span><span nodeIndex=\"95\">;</span>\n    console<span nodeIndex=\"96\">.</span><span nodeIndex=\"97\">log</span><span nodeIndex=\"98\">(</span>\n      <span nodeIndex=\"99\">\"Visit the following URL and click approve in the next 10 seconds:\"</span>\n    <span nodeIndex=\"100\">)</span><span nodeIndex=\"101\">;</span>\n    console<span nodeIndex=\"102\">.</span><span nodeIndex=\"103\">log</span><span nodeIndex=\"104\">(</span>uri<span nodeIndex=\"105\">)</span><span nodeIndex=\"106\">;</span>\n\n    <span nodeIndex=\"107\">setTimeout</span><span nodeIndex=\"108\">(</span><span nodeIndex=\"109\">async</span> <span nodeIndex=\"110\">function</span> <span nodeIndex=\"111\">(</span><span nodeIndex=\"112\">)</span> <span nodeIndex=\"113\">{</span>\n      <span nodeIndex=\"114\">try</span> <span nodeIndex=\"115\">{</span>\n        <span nodeIndex=\"116\">let</span> r <span nodeIndex=\"117\">=</span> <span nodeIndex=\"118\">await</span> auth<span nodeIndex=\"119\">.</span><span nodeIndex=\"120\">getAccessToken</span><span nodeIndex=\"121\">(</span>consumerKey<span nodeIndex=\"122\">,</span> code<span nodeIndex=\"123\">.</span>code<span nodeIndex=\"124\">)</span><span nodeIndex=\"125\">;</span>\n        console<span nodeIndex=\"126\">.</span><span nodeIndex=\"127\">log</span><span nodeIndex=\"128\">(</span>r<span nodeIndex=\"129\">)</span><span nodeIndex=\"130\">;</span>\n      <span nodeIndex=\"131\">}</span> <span nodeIndex=\"132\">catch</span> <span nodeIndex=\"133\">(</span>err<span nodeIndex=\"134\">)</span> <span nodeIndex=\"135\">{</span>\n        console<span nodeIndex=\"136\">.</span><span nodeIndex=\"137\">error</span><span nodeIndex=\"138\">(</span>err<span nodeIndex=\"139\">)</span><span nodeIndex=\"140\">;</span>\n        console<span nodeIndex=\"141\">.</span><span nodeIndex=\"142\">log</span><span nodeIndex=\"143\">(</span>\n          <span nodeIndex=\"144\">\"You didn't click the link and approve the application in time\"</span>\n        <span nodeIndex=\"145\">)</span><span nodeIndex=\"146\">;</span>\n      <span nodeIndex=\"147\">}</span>\n    <span nodeIndex=\"148\">}</span><span nodeIndex=\"149\">,</span> <span nodeIndex=\"150\">20000</span><span nodeIndex=\"151\">)</span><span nodeIndex=\"152\">;</span>\n  <span nodeIndex=\"153\">}</span> <span nodeIndex=\"154\">catch</span> <span nodeIndex=\"155\">(</span>err<span nodeIndex=\"156\">)</span> <span nodeIndex=\"157\">{</span>\n    console<span nodeIndex=\"158\">.</span><span nodeIndex=\"159\">log</span><span nodeIndex=\"160\">(</span>err<span nodeIndex=\"161\">)</span><span nodeIndex=\"162\">;</span>\n  <span nodeIndex=\"163\">}</span>\n<span nodeIndex=\"164\">}</span>\n\n<span nodeIndex=\"165\">main</span><span nodeIndex=\"166\">(</span><span nodeIndex=\"167\">)</span><span nodeIndex=\"168\">;</span></code></pre>\n<p nodeIndex=\"30\">The script will show a URL with the request token, and after 20 seconds it attempts to grab the access key &ndash; meanwhile, you need to authorize access to Pocket.</p>\n<p nodeIndex=\"31\">Only later I've found that Michael also built a <a href=\"https://github.com/mheap/pocket-auth-cli\" nodeIndex=\"169\">CLI tool for pocket-auth</a>, which is much more convenient. Just run the tool with consumer key as argument, and it will handle the whole flow.</p>\n<pre nodeIndex=\"32\"><code nodeIndex=\"170\">$ npx pocket-auth-cli <span nodeIndex=\"171\">&lt;</span>Pocket consumer key<span nodeIndex=\"172\">&gt;</span>\nOpening web browser to authorize application\nPress CTRL+C to cancel\n<span nodeIndex=\"173\">{</span> access_token: <span nodeIndex=\"174\">'&lt;redacted&gt;'</span>, username: <span nodeIndex=\"175\">'&lt;redacted&gt;'</span> <span nodeIndex=\"176\">}</span></code></pre>\n<h2 tabindex=\"-1\" nodeIndex=\"33\">Onto retrieval</h2>\n<p nodeIndex=\"34\">This was a distracting but necessary step to get access to Pocket's API. Now it's time to retrieve some articles &ndash; but let's keep it for another time.</p>\n</div>",
+    "preview": {
+      "previewId": "f43T2A16g296dX2b60dY311w39pdg727cH7qd8r2aKK078Kvf9930Sd3W45yz9fu_1b5dd6069d1fc70444f66457ab05dd3f",
+      "excerpt": "I've been using Pocket for quite some time. Recently, I wanted to build something on top of their API. I've collected my notes and thoughts on Pocket API as a future reference for myself. Perhaps it will be useful to you. The first thing I needed to figure out was authorization.",
+      "title": "Exploring Pocket API: Authorization",
+      "authors": [
+        {
+          "id": "192146114",
+          "name": "Jan Vlnas",
+          "url": "https://jan.vlnas.cz"
+        }
+      ],
+      "domain": {
+        "name": "www.bitoff.org"
+      },
+      "datePublished": "2023-01-18T06:00:00.000Z",
+      "url": "https://www.bitoff.org/pocket-api-auth/",
+      "image": {
+        "caption": "",
+        "credit": "",
+        "url": "https://www.bitoff.org/img/generated/trnDhK_EXp-927.svg",
+        "cachedImages": [
+          {
+            "url": "https://pocket-image-cache.com/640x/filters:format(WEBP):quality(100):no_upscale():strip_exif()/https%3A%2F%2Fwww.bitoff.org%2Fimg%2Fgenerated%2FtrnDhK_EXp-927.svg",
+            "id": "WebPImage"
+          }
+        ]
+      },
+      "source": "POCKET_PARSER"
+    }
+  },
+  "_createdAt": 1674086165,
+  "_updatedAt": 1674263033,
+  "title": "Exploring Pocket API: Authorization",
+  "url": "https://www.bitoff.org/pocket-api-auth/",
+  "savedId": "3789569881",
+  "status": "ARCHIVED",
+  "isFavorite": false,
+  "favoritedAt": null,
+  "isArchived": true,
+  "archivedAt": 1674263032,
+  "tags": [],
+  "annotations": {
+    "highlights": []
+  }
+}
