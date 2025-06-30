@@ -43,8 +43,7 @@ async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
       console.debug('No more saved items found.');
       break;
     }
-    let itemsCount = 0;
-    await saveOrEnqueueItems(
+    const { saved, enqueued } = await saveOrEnqueueItems(
       kv,
       pocketStore,
       items.user.savedItems.edges.map((edge) => edge?.node),
@@ -58,7 +57,7 @@ async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
     //   await kv.enqueue(node);
     //   itemsCount++;
     // }
-    console.info(`Saved ${itemsCount} items`);
+    console.info(`Saved ${saved} items, enqueued ${enqueued} items.`);
 
     hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
     cursor = items.user.savedItems.pageInfo.endCursor as string | null;
@@ -72,8 +71,9 @@ async function saveOrEnqueueItems(
   kv: PocketKv,
   store: PocketStore,
   items: ArticleFetchQueueItem[],
-): Promise<number> {
+): Promise<{ saved: number; enqueued: number }> {
   let processedCount = 0;
+  let enqueuedCount = 0;
   for (const queueItem of items) {
     if (!queueItem?.savedId) {
       console.warn('Skipping item without savedId:', queueItem);
@@ -92,9 +92,10 @@ async function saveOrEnqueueItems(
       console.info(`Enqueuing item without slug: ${savedId}`);
       await store.writePartialItem(savedId, queueItem);
       await kv.enqueue(queueItem);
+      enqueuedCount++;
     }
   }
-  return processedCount;
+  return { saved: processedCount, enqueued: enqueuedCount };
 }
 
 function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
