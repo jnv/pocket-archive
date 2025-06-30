@@ -24,19 +24,21 @@ const pocketClient = GraphqlClient(POCKET_CREDENTIALS);
 const { values: args } = parseArgs({
   args: process.argv.slice(2),
   options: {
-    enqueue: { type: 'boolean', default: false },
-    process: { type: 'boolean', default: false },
     output: { type: 'string', default: DEFAULT_OUTPUT_DIR, short: 'o' },
   },
 });
 
-async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
+async function listAllItems(
+  kv: PocketKv,
+  pocketStore: PocketStore,
+): Promise<number> {
   let hasNextPage = true;
   let cursor: string | null = await kv.getCheckpoint();
   if (cursor) {
     console.info(`Resuming from cursor: ${cursor}`);
   }
 
+  let totalCount = 0;
   while (hasNextPage) {
     const items = await pocketClient.getSavedItems(cursor);
     if (!items?.user?.savedItems?.edges) {
@@ -48,15 +50,7 @@ async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
       pocketStore,
       items.user.savedItems.edges.map((edge) => edge?.node),
     );
-    // for (const edge of items.user.savedItems.edges) {
-    //   const node = edge?.node;
-    //   if (!node) {
-    //     console.warn('Skipping edge without node:', edge);
-    //     continue;
-    //   }
-    //   await kv.enqueue(node);
-    //   itemsCount++;
-    // }
+    totalCount += saved + enqueued;
     console.info(`Saved ${saved} items, enqueued ${enqueued} items.`);
 
     hasNextPage = items.user.savedItems.pageInfo.hasNextPage;
@@ -65,6 +59,7 @@ async function listAllItems(kv: PocketKv, pocketStore: PocketStore) {
       await kv.setCheckpoint(cursor);
     }
   }
+  return totalCount;
 }
 
 async function saveOrEnqueueItems(
@@ -102,9 +97,7 @@ function isItemWithSlug(o: PocketUnknownItem): o is PocketSavedItemWithSlug {
   return (o as PocketSavedItemWithSlug)?.__typename === 'Item';
 }
 
-async function getItemProcessor(outputDir: string) {
-  const pocketStore = new PocketStore(outputDir);
-  await pocketStore.init();
+async function getItemProcessor(pocketStore: PocketStore) {
   return async (queueItem: ArticleFetchQueueItem) => {
     try {
       if (!queueItem?.savedId) {
@@ -158,19 +151,11 @@ async function main() {
     });
   });
 
-  const promises: Promise<void>[] = [];
-  if (args.enqueue) {
-    console.info('Enqueuing items...');
-    promises.push(listAllItems(pocketKv, pocketStore));
-  }
-  if (args.process) {
-    console.info('Processing items...');
-    pocketKv.listenQueue(await getItemProcessor(outputDir));
-    promises.push(monitorQueue(pocketKv));
-  }
-
-  await Promise.all(promises);
-  pocketKv.stop();
+  const totalProcessed = await listAllItems(pocketKv, pocketStore);
+  console.info(`Total items processed: ${totalProcessed}`);
+  pocketKv.listenQueue(await getItemProcessor(pocketStore));
+  await monitorQueue(pocketKv);
+  await pocketKv.stop();
 }
 
 main();

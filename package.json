@@ -17,7 +17,6 @@
   },
   "scripts": {
     "lint": "biome check --write",
-    "enqueue": "bun run src/main.ts --enqueue",
-    "process": "bun run src/main.ts --process"
+    "start": "bun run src/main.ts",
   }
 }
